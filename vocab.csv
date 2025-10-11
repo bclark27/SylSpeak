@@ -1,4 +1,4 @@
-## numbers group 1
+## group 1
 one,一,1000
 two,二,1000
 three,三,1000
@@ -23,6 +23,7 @@ the,嗰,1000
 ## auxiliary
 might,或,1000
 no,不,1000
+not,唔,1000
 se,的,2000 # posessive particle
 ed,了,1000
 be,係,1000
@@ -36,11 +37,9 @@ can,能,1000
 with,和,1000
 and,而,1000
 
-## preposition group 1
 in,裡,1000
 at,喺,1000
 
-## adverbs group 1
 out,外,1000
 up,上,1000
 down,下,1000
@@ -49,14 +48,12 @@ right,右,1000
 now,現,1000
 oft,常,1000 # often
 
-## adjectives group 1
 much,太,1000
 same,同,1500
 big,大,1000
 mid,中,1000
 small,小,1250
 
-## nouns group 1
 rear,後,1000
 front,前,1000
 side,邊,1000
@@ -78,7 +75,7 @@ rune,字,1000
 wat,水,1000 # water
 poop,㞎,1000
 town,城,1000
-house,屋,1000
+home,屋,1000
 side,面,1000
 box,箱,1000
 brain,腦,1000
@@ -89,8 +86,28 @@ min,分,1000
 tree,樹,1000
 hour,鐘,1000
 sec,秒,1000
+love,爱,1000
+road,道,1000
+mount,山,1000
+horse,马,1000
+stream,河,1000
+north,北,1000
+south,南,1000
+east,東,1000
+west,西,1000
+name,名,1000
+all,全,1000
+school,校,1000
+book,書,1000
+write,作,1000
+morn,早,1000
+dusk,旦,1000
+night,夜,1000
+light,光,1000
+moon,月,1000
 
-## verbs group 1
+leave,出,1000
+ent,入,1000
 shop,購,1000
 learn,學,1000
 share,共,1000
@@ -102,19 +119,16 @@ think,諗,1000
 want,想,1000
 have,有,1000
 do,做,1000
+use,用,1000
+say,說,1000
+ask,請,1000
+try,試,1000
+see,看,1000
+cheat,詐,1000
+rob,偷,1000
+buy,買,1000
+come,回,1000
+get,得,1000
 
-## adverbs group 2
-in side,[in][side],1000 # inside, interior
-
-## verbs group 2
-poop do,[poop][do],1000
-plant do,[plant][do],1000 # the act of planting
-
-## nouns group 2
-learn place,[learn][place],1000 # school
-heum car,[heum][car],1000 # bus
-farm heum,[farm][heum],1000 # farmer
-big town,[big][town],1000 # city
-small town,[small][town],1000 # village
-think box,[think][box],1000 # computer
+## group 2
 
