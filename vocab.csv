@@ -53,6 +53,8 @@ same,同,1500
 big,大,1000
 mid,中,1000
 small,小,1250
+good,好,1000
+bad,壞,1000
 
 rear,後,1000
 front,前,1000
@@ -66,7 +68,7 @@ place,區,1000
 car,車,1000
 store,店,1000
 farm,田,1000
-thing,子,1000
+thing,物,1000
 heum,人,1000
 still,还,1000
 more,更,1000
@@ -105,6 +107,13 @@ dusk,旦,1000
 night,夜,1000
 light,光,1000
 moon,月,1000
+cat,貓,1000
+dog,貓,1000
+male,男,1000
+fmale,女,1000
+kid,子,1000
+
+
 
 leave,出,1000
 ent,入,1000
@@ -129,6 +138,5 @@ rob,偷,1000
 buy,買,1000
 come,回,1000
 get,得,1000
-
 ## group 2
 
