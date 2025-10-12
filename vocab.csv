@@ -9,6 +9,7 @@ sev,七,1000
 eight,八,1000
 nine,九,1000
 ten,十,1000
+thou,千,1000
 
 ## pronouns
 i,我,1000
@@ -21,42 +22,63 @@ this,呢,1000
 the,嗰,1000
 
 ## auxiliary
-might,或,1000
+might,能,1000
 no,不,1000
 not,唔,1000
 se,的,2000 # posessive particle
 ed,了,1000
 be,係,1000
 ing,緊,1000
-when,時,1000
+when,当,1000
+what,甚,1000
+which,孰,1000
+how,怎,1000
 will,會,1000
 but,但,1000
 to,往,1000
 for,為,1000
-can,能,1000
+can,可,1000
 with,和,1000
 and,而,1000
+by,以,1000
+if,如,1000
 
 in,裡,1000
 at,喺,1000
-
 out,外,1000
 up,上,1000
 down,下,1000
 left,左,1000
 right,右,1000
 now,現,1000
-oft,常,1000 # often
+or,或,1000
+just,只,1000
 
+oft,常,1000 # often
 much,太,1000
+most,最,1000
 same,同,1500
 big,大,1000
 mid,中,1000
 small,小,1250
 good,好,1000
 bad,壞,1000
+some,些,1000
+rare,鮮,1000
+white,白,1000
+black,黑,1000
+diff,異,1000
+hard,難,1000
+clear,便,1000
+too,都,1000
+long,長,1000
+short,短,1000
 
-rear,後,1000
+head,頭,1000
+back,後,1000
+time,時,1000
+week,週,1000
+num,数,1000
 front,前,1000
 side,邊,1000
 mec,機,1000 # machine
@@ -72,9 +94,10 @@ thing,物,1000
 heum,人,1000
 still,还,1000
 more,更,1000
+less,少,1000
 lot,多,1000
 rune,字,1000
-wat,水,1000 # water
+wat,水,1000
 poop,㞎,1000
 town,城,1000
 home,屋,1000
@@ -82,7 +105,7 @@ side,面,1000
 box,箱,1000
 brain,腦,1000
 heart,心,1000
-zap,電,1000 # electricity
+zap,電,1000
 plant,植,1000
 min,分,1000
 tree,樹,1000
@@ -112,20 +135,35 @@ dog,貓,1000
 male,男,1000
 fmale,女,1000
 kid,子,1000
+lang,文,1000
+year,年,1000
+life,生,1000
+world,世,1000
+fam,家,1000
+group,社,1000
+prob,題,1000
+part,部,1000
+hand,手,1000
+foot,足,1000
+leg,腿,1000
 
-
-
+work,工,1000
 leave,出,1000
+stand,站,1000
+stop,止,1000
+start,始,1000
+end,終,1000
 ent,入,1000
 shop,購,1000
 learn,學,1000
+teach,教,1000
 share,共,1000
 go,行,1000
 walk,走,1000
 run,跑,1000
 like,意,1000
-think,諗,1000
-want,想,1000
+think,想,1000
+want,要,1000
 have,有,1000
 do,做,1000
 use,用,1000
@@ -138,5 +176,15 @@ rob,偷,1000
 buy,買,1000
 come,回,1000
 get,得,1000
+say,話,1000
+make,造,1000
+know,知,1000
+change,變,1000
+
+
 ## group 2
 
+
+
+# candidates
+# 幾: how much/how many

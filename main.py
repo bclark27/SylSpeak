@@ -4,7 +4,6 @@ import re
 import sys
 import subprocess
 
-
 vocab_path = "vocab.csv"
 lang_name = "conlang"
 
@@ -14,6 +13,7 @@ RIME_BUILD = RIME_ROOT + "/build"
 
 
 learning_mode = "-h" in sys.argv or "--help" in sys.argv
+en_mode = "-e" in sys.argv or "--english" in sys.argv
 
 DEFAULT_CUSTOM_YAML__NAME = "default.custom.yaml"
 LANG_SCHEMA_YAML__NAME = f"{lang_name}.schema.yaml"
@@ -134,7 +134,9 @@ def generate_tab_seperated_vocab():
       raw_info[1] = expanded = re.sub(r'\[([^\]]+)\]', lambda m: char_dict.get(m.group(1), m.group(1)), raw_info[1])
       char_dict[raw_info[0]] = raw_info[1]
 
-      if learning_mode:
+      if en_mode:
+        raw_info[1] = f"{raw_info[0]} "
+      elif learning_mode:
         raw_info[1] = f"{raw_info[1]}({raw_info[0]})"
 
       vocab_lines.append('\t'.join(raw_info))
