@@ -16,10 +16,9 @@ def main():
         continue
 
       raw_info = line.split(',')
-
       splitLines.append(raw_info)
 
-    sortedSplitLines = sorted(splitLines, key=lambda x: (len(x[0].split()), x[0].lower(), int(x[2])))
+    sortedSplitLines = sorted(splitLines, key=lambda x: (len(x[0].split()), x[0].lower()))
 
     for line in sortedSplitLines:
         vocab_lines.append(','.join(line))
@@ -27,7 +26,6 @@ def main():
   content = '\n'.join(vocab_lines)
   print(content)
   return
-
   with open(vocab_path, 'w') as file:
     file.write(content)
 
