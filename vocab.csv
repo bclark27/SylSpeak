@@ -25,10 +25,10 @@ the,嗰,1000
 might,能,1000
 no,不,1000
 not,唔,1000
-se,的,2000 # posessive particle
+z,的,1000 # posessive particle
 ed,了,1000
 be,係,1000
-ing,緊,1000
+ing,著,1000
 when,当,1000
 what,甚,1000
 which,孰,1000
@@ -42,6 +42,7 @@ with,和,1000
 and,而,1000
 by,以,1000
 if,如,1000
+then,已,1000
 
 in,裡,1000
 at,喺,1000
@@ -53,9 +54,9 @@ right,右,1000
 now,現,1000
 or,或,1000
 just,只,1000
+so,咁,1000
 
 oft,常,1000 # often
-much,太,1000
 most,最,1000
 same,同,1500
 big,大,1000
@@ -88,7 +89,29 @@ thin,細,1000
 wide,廣,1000
 dry,燥,1000
 wet,濕,1000
+soon,就,1000
+civ,民,1000
+form,形,1000
+pal,朋,1000
+weird,奇,1000
+sly,詭,1000
+clean,淨,1000
+foul,污,1000
+vile,恶,1000
+ugly,醜,1000
+tight,嚴,1000
+great,太,1000
 
+much,緊,1000
+amt,幾,1000
+filth,骯,1000
+style,式,1000
+type,類,1000
+both,兩,1000
+bod,身,1000
+flood,洪,1000
+harm,害,1000
+death,死,1000
 rain,雨,1000
 pad,墊,1000
 crack,隙,1000
@@ -107,7 +130,6 @@ time,時,1000
 week,週,1000
 num,数,1000
 pre,前,1000
-side,邊,1000
 mec,機,1000 # machine
 void,空,1000
 air,氣,1000
@@ -131,6 +153,7 @@ poop,㞎,1000
 town,城,1000
 home,屋,1000
 side,面,1000
+dir,方,1000
 box,箱,1000
 brain,腦,1000
 heart,心,1000
@@ -153,7 +176,6 @@ name,名,1000
 all,全,1000
 school,校,1000
 book,書,1000
-write,作,1000
 morn,早,1000
 dusk,旦,1000
 night,夜,1000
@@ -193,7 +215,33 @@ alc,酒,1000
 beer,啤,1000
 meat,肉,1000
 juice,汁,1000
+state,國,1000
+way,噉,1000
+cause,因,1000
+soil,壤,1000
+earth,地,1000
+ash,灰,1000
+dirt,埃,1000
+dust,塵,1000
+mud,泥,1000
+list,單,1000
+beach,灘,1000
+shore,岸,1000
+front,正,1000
+back,背,1000
+shit,屎,1000
 
+trade,販,1000
+sell,賣,1000
+write,寫,1000
+doubt,疑,1000
+act,作,1000
+help,幫,1000
+float,泛,1000
+close,關,1000
+fall,掉,1000
+drown,淹,1000
+read,讀,1000
 drink,飲,1000
 eat,吃,1000
 wrap,包,1000
@@ -249,12 +297,11 @@ make,造,1000
 know,知,1000
 change,變,1000
 find,找,1000
+ret,返,1000
 meet,見,1000
-
+search,搵,1000
+move,動,1000
+change,改,1000
+shift,移,1000
 
 ## group 2
-
-
-
-# candidates
-# 幾: how much/how many
