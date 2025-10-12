@@ -25,7 +25,7 @@ def main():
 
   content = '\n'.join(vocab_lines)
   print(content)
-  return
+
   with open(vocab_path, 'w') as file:
     file.write(content)
 
