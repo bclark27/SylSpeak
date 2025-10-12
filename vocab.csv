@@ -80,7 +80,20 @@ mean,陋,1000
 flat,平,1000
 wild,狂,1000
 calm,安,1000
+near,近,1000
+far,遠,1000
+quite,很,1000
+fast,快,1000
+thin,細,1000
+wide,廣,1000
+dry,燥,1000
+wet,濕,1000
 
+rain,雨,1000
+pad,墊,1000
+crack,隙,1000
+gap,間,1000
+force,力,1000
 route,路,1000
 line,紋,1000
 thread,線,1000
@@ -89,13 +102,15 @@ eye,睛,1000
 mom,媽,1000
 dad,爸,1000
 head,頭,1000
-back,後,1000
+post,後,1000
 time,時,1000
 week,週,1000
 num,数,1000
-front,前,1000
+pre,前,1000
 side,邊,1000
 mec,機,1000 # machine
+void,空,1000
+air,氣,1000
 sky,天,1000
 day,日,1000
 sun,陽,1000
@@ -168,7 +183,28 @@ edge,際,1000
 law,律,1000
 round,圓,1000
 next,次,1000
+grass,草,1000
+song,歌,1000
+sound,聲,1000
+quant,幾,1000
+fire,火,1000
+food,食,1000
+alc,酒,1000
+beer,啤,1000
+meat,肉,1000
+juice,汁,1000
 
+drink,飲,1000
+eat,吃,1000
+wrap,包,1000
+sing,唱,1000
+hang,掛,1000
+yell,喊,1000
+call,叫,1000
+break,斷,1000
+push,推,1000
+pull,拉,1000
+cut,劃,1000
 rise,起,1000
 take,拿,1000
 give,予,1000
@@ -181,7 +217,7 @@ draw,畫,1000
 hit,打,1000
 work,工,1000
 leave,出,1000
-stand,站,1000
+stand,立,1000
 stop,止,1000
 start,始,1000
 end,終,1000
@@ -212,6 +248,7 @@ say,話,1000
 make,造,1000
 know,知,1000
 change,變,1000
+find,找,1000
 meet,見,1000
 
 

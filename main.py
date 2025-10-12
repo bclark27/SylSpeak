@@ -12,8 +12,9 @@ RIME_ROOT = "/home/ben/.config/ibus/rime"
 RIME_BUILD = RIME_ROOT + "/build"
 
 
-learning_mode = "-h" in sys.argv or "--help" in sys.argv
+learning_mode = "-l" in sys.argv or "--learn" in sys.argv
 en_mode = "-e" in sys.argv or "--english" in sys.argv
+space_mode = "-s" in sys.argv or "--space" in sys.argv
 
 DEFAULT_CUSTOM_YAML__NAME = "default.custom.yaml"
 LANG_SCHEMA_YAML__NAME = f"{lang_name}.schema.yaml"
@@ -136,8 +137,11 @@ def generate_tab_seperated_vocab():
 
       if en_mode:
         raw_info[1] = f"{raw_info[0]} "
-      elif learning_mode:
-        raw_info[1] = f"{raw_info[1]}({raw_info[0]})"
+      else:
+        if learning_mode:
+          raw_info[1] = f"{raw_info[1]}({raw_info[0]})"
+        if space_mode:
+          raw_info[1] = f"{raw_info[1]} "
 
       vocab_lines.append('\t'.join(raw_info))
   return vocab_lines
