@@ -73,7 +73,21 @@ clear,便,1000
 too,都,1000
 long,長,1000
 short,短,1000
+old,老,1000
+new,新,1000
+nice,藹,1000
+mean,陋,1000
+flat,平,1000
+wild,狂,1000
+calm,安,1000
 
+route,路,1000
+line,紋,1000
+thread,線,1000
+row,排,1000
+eye,睛,1000
+mom,媽,1000
+dad,爸,1000
 head,頭,1000
 back,後,1000
 time,時,1000
@@ -91,7 +105,7 @@ car,車,1000
 store,店,1000
 farm,田,1000
 thing,物,1000
-heum,人,1000
+guy,人,1000
 still,还,1000
 more,更,1000
 less,少,1000
@@ -146,7 +160,25 @@ part,部,1000
 hand,手,1000
 foot,足,1000
 leg,腿,1000
+point,點,1000
+coin,元,1000
+game,賽,1000
+peace,靜,1000
+edge,際,1000
+law,律,1000
+round,圓,1000
+next,次,1000
 
+rise,起,1000
+take,拿,1000
+give,予,1000
+ban,禁,1000
+pass,過,1000
+win,贏,1000
+fail,失,1000
+pick,選,1000
+draw,畫,1000
+hit,打,1000
 work,工,1000
 leave,出,1000
 stand,站,1000
@@ -180,6 +212,7 @@ say,話,1000
 make,造,1000
 know,知,1000
 change,變,1000
+meet,見,1000
 
 
 ## group 2

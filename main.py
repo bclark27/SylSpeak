@@ -148,7 +148,7 @@ def main():
   
   vocab_lines = generate_tab_seperated_vocab()
   content = '\n'.join(vocab_lines)
-  
+
   clean_rime()
 
   create_file(RIME_ROOT + f"/{DEFAULT_CUSTOM_YAML__NAME}", DEFAULT_CUSTOM_YAML__CONTENT)
