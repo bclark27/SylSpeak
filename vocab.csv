@@ -5,6 +5,7 @@ alc,酒,1000
 all,全,1000
 amt,幾,1000
 and,而,1000
+ans,答,1000
 arm,臂,1000
 ash,灰,1000
 ask,問,1000
@@ -55,10 +56,12 @@ cast,投,1000
 cat,貓,1000
 catch,捕,1000
 cause,因,1000
+cave,穴,1000
 chair,椅,1000
 change,變,1000
 chase,追,1000
 cheat,詐,1000
+circ,圈,1000
 civ,民,1000
 class,等,1000
 clay,土,1000
@@ -72,7 +75,7 @@ clothes,裝,1000
 coal,炭,1000
 coin,元,1000
 cold,冷,1000
-come,回,1000
+come,來,1000
 cook,煮,1000
 cover,套,1000
 cow,牛,1000
@@ -93,8 +96,10 @@ dirt,埃,1000
 disk,片,1000
 do,做,1000
 doc,醫,1000
+dock,塢,1000
 dodge,躲,1000
 dog,狗,1000
+done,成,1000
 door,門,1000
 doubt,疑,1000
 down,下,1000
@@ -109,6 +114,7 @@ dust,塵,1000
 earth,地,1000
 east,東,1000
 eat,吃,1000
+echo,響,1000
 ed,了,1000
 edge,際,1000
 eight,八,1000
@@ -188,6 +194,7 @@ high,高,1000
 hire,任,1000
 hit,打,1000
 hold,把,1000
+hole,洞,1000
 home,屋,1000
 hope,希,1000
 horse,馬,1000
@@ -224,6 +231,7 @@ lift,抬,1000
 light,光,1000
 like,意,1000
 line,紋,1000
+link,連,1000
 list,單,1000
 live,活,1000
 loathe,厭,1000
@@ -234,9 +242,11 @@ make,造,1000
 male,男,1000
 max,限,1000
 mean,陋,1000
+meas,度,1000
 meat,肉,1000
 mec,機,1000
 meet,見,1000
+memb,憶,1000
 mend,整,1000
 mid,中,1000
 might,能,1000
@@ -283,6 +293,7 @@ pal,朋,1000
 pare,削,1000
 part,部,1000
 pass,過,1000
+past,曾,1000
 path,軌,1000
 pay,拜,1000
 peace,靜,1000
@@ -308,11 +319,15 @@ quick,速,1000
 quite,很,1000
 rain,雨,1000
 rare,鮮,1000
+re,重,1000
+reach,達,1000
 read,讀,1000
 real,真,1000
 red,紅,1000
 ret,返,1000
+rev,回,1000
 right,右,1000
+ring,環,1000
 rinse,沖,1000
 rise,起,1000
 road,道,1000
@@ -328,11 +343,12 @@ run,跑,1000
 rune,字,1000
 sad,悲,1000
 sail,篷,1000
+salt,鹽,1000
 same,同,1500
 say,話,1000
 scale,登,1000
 school,校,1000
-score,成,1000
+scope,界,1000
 search,搵,1000
 sec,秒,1000
 see,看,1000
@@ -340,6 +356,7 @@ sell,賣,1000
 send,發,1000
 sev,七,1000
 sew,縫,1000
+shall,將,1000
 share,共,1000
 shears,剪,1000
 sheep,羊,1000
@@ -360,6 +377,7 @@ sit,坐,1000
 six,六,1000
 size,尺,1000
 sky,天,1000
+slave,奴,1000
 sleep,睡,1000
 slide,滑,1000
 sly,詭,1000
@@ -375,6 +393,7 @@ soon,就,1000
 sound,聲,1000
 soup,湯,1000
 south,南,1000
+space,空,1000
 speak,說,1000
 spesh,特,1000
 spill,撒,1000
@@ -391,6 +410,7 @@ stitch,紩,1000
 stop,止,1000
 store,店,1000
 stream,河,1000
+streight,直,1000
 strong,強,1000
 stuff,料,1000
 style,式,1000
@@ -444,9 +464,10 @@ use,用,1000
 veil,帳,1000
 via,從,1000
 vile,恶,1000
-void,空,1000
+void,虛,1000
 wake,醒,1000
 walk,走,1000
+wall,牆,1000
 want,要,1000
 war,戰,1000
 wash,洗,1000
@@ -462,6 +483,7 @@ what,甚,1000
 wheel,輪,1000
 when,当,1000
 which,孰,1000
+while,卻,1000
 white,白,1000
 whole,合,1000
 wide,廣,1000
