@@ -12,6 +12,7 @@ ask,問,1000
 at,喺,1000
 back,背,1000
 bad,壞,1000
+bag,袋,1000
 bake,焗,1000
 ban,禁,1000
 bath,澡,1000
@@ -20,6 +21,7 @@ be,係,1000
 beach,灘,1000
 bean,豆,1000
 bear,負,1000
+piece,塊,1000
 bed,床,1000
 beer,啤,1000
 big,大,1000
@@ -34,6 +36,7 @@ blood,血,1000
 board,板,1000
 boat,航,1000
 bod,身,1000
+boob,奶,1000
 book,書,1000
 boss,闆,1000
 both,兩,1000
@@ -48,7 +51,9 @@ bright,亮,1000
 bro,弟,1000
 broke,破,1000
 broth,漿,1000
+bug,蟲,1000
 build,建,1000
+bunch,綑,1000
 burn,燒,1000
 burst,爆,1000
 but,但,1000
@@ -103,9 +108,11 @@ dad,爸,1000
 dam,壩,1000
 dash,突,1000
 day,日,1000
+debt,債,1000
 desk,檯,1000
 dev,器,1000
 dew,露,1000
+dick,㞗,1000
 die,死,1000
 diff,異,1000
 dip,蘸,1000
@@ -162,6 +169,7 @@ firm,堅,1000
 five,五,1000
 fix,補,1000
 flake,薄,1000
+flash,閃,1000
 flat,平,1000
 float,泛,1000
 flood,洪,1000
@@ -180,10 +188,12 @@ four,四,1000
 france,法,1000
 free,釋,1000
 freeze,凍,1000
+friend,友,1000
 from,於,1000
 front,正,1000
 fruit,果,1000
 game,賽,1000
+grant,賜,1000
 gap,間,1000
 get,得,1000
 give,予,1000
@@ -284,7 +294,7 @@ memb,憶,1000
 mend,整,1000
 mid,中,1000
 might,能,1000
-milk,奶,1000
+milk,乳,1000
 min,分,1000
 mom,媽,1000
 mood,情,1000
@@ -326,6 +336,7 @@ open,開,1000
 or,或,1000
 orng,橙,1000
 out,外,1000
+owe,欠,1000
 pad,墊,1000
 pain,苦,1000
 pal,朋,1000
@@ -478,6 +489,7 @@ style,式,1000
 sub,亞,1000
 sun,陽,1000
 swap,換,1000
+string,串,1000
 sweep,掃,1000
 switch,閘,1000
 take,拿,1000
@@ -540,6 +552,7 @@ war,戰,1000
 wash,洗,1000
 wat,水,1000
 watch,瞭,1000
+wax,蠟,1000
 way,噉,1000
 wear,衣,1000
 week,週,1000
@@ -548,7 +561,7 @@ west,西,1000
 wet,濕,1000
 what,甚,1000
 wheel,輪,1000
-when,当,1000
+when,當,1000
 which,孰,1000
 while,卻,1000
 white,白,1000
@@ -567,6 +580,7 @@ woods,林,1000
 word,言,1000
 work,工,1000
 world,世,1000
+worm,豸,1000
 worth,值,1000
 wrap,包,1000
 write,寫,1000
@@ -574,7 +588,7 @@ wrong,錯,1000
 yard,院,1000
 year,年,1000
 yell,喊,1000
-yes,是1000
+yes,是,1000
 yet,且,1000
 you,你,1000
 zap,電,1000
