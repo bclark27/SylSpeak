@@ -17,22 +17,30 @@ class Glyph:
                 path_str, 
                 width, 
                 height,
-                min_width_ratio=0.5,
-                max_width_ratio=1.5,
-                min_height_ratio=0.5,
-                max_height_ratio=1.5,
                 is_hollow=False,
                 inside_margins=[0.1, 0.1, 0.1, 0.1]):
         self.name = name
         self.path = parse_path(path_str)
         self.width = width
         self.height = height
-        self.min_width_ratio = min_width_ratio
-        self.max_width_ratio = max_width_ratio
-        self.min_height_ratio = min_height_ratio
-        self.max_height_ratio = max_height_ratio
         self.is_hollow = is_hollow
         self.inside_margins = inside_margins
+
+        '''
+        # Mirror horizontally and vertically (flip both X and Y)
+        # Centered around the origin (0,0)
+        bbox = self.path.bbox()
+        width = bbox[2] - bbox[0]
+        height = bbox[3] - bbox[1]
+        
+        # Move glyph so bottom-left is at origin before flipping
+        self.path = self.path.translated(-complex(bbox[0], bbox[1]))
+        # Flip horizontally and vertically
+        self.path = self.path.scaled(-1, -1)
+        # Move back into positive quadrant
+        self.path = self.path.translated(complex(width, height))
+        '''
+        
 
 class Composition:
     def __init__(self, op=None, sub_comp1=None, sub_comp2=None, leaf_glyph=None):
@@ -45,157 +53,182 @@ class Composition:
     def is_leaf(self):
         return self.leaf_glyph is not None
 
+    def is_hollow(self):
+        return self.is_leaf() and self.leaf_glyph.is_hollow
+
     def get_composition_side_ratio(self):
         if self.is_leaf():
             return (self.leaf_glyph.width, self.leaf_glyph.height)
-        return (1, 1)
 
-    def get_stretching_limits(self):
-        if self.is_leaf():
-            g = self.leaf_glyph
-            return (g.min_width_ratio, g.max_width_ratio,
-                    g.min_height_ratio, g.max_height_ratio)
+        # Recursively get child sizes
+        w1, h1 = self.sub_comp1.get_composition_side_ratio()
+        w2, h2 = self.sub_comp2.get_composition_side_ratio()
 
-        w1_min, w1_max, h1_min, h1_max = self.sub_comp1.get_stretching_limits()
-        w2_min, w2_max, h2_min, h2_max = self.sub_comp2.get_stretching_limits()
-
-        if self.op == CompositionOp.HORZ:
-            min_width = w1_min + w2_min
-            max_width = w1_max + w2_max
-            min_height = max(h1_min, h2_min)
-            max_height = min(h1_max, h2_max)
-        elif self.op == CompositionOp.VERT:
-            min_height = h1_min + h2_min
-            max_height = h1_max + h2_max
-            min_width = max(w1_min, w2_min)
-            max_width = min(w1_max, w2_max)
+        if self.op == CompositionOp.VERT:
+            total_height = h1 + h2
+            self.sub_comp1_percent = h1 / total_height if total_height != 0 else 0.5
+            w = max(w1, w2)
+            h = total_height
+        elif self.op == CompositionOp.HORZ:
+            total_width = w1 + w2
+            self.sub_comp1_percent = w1 / total_width if total_width != 0 else 0.5
+            w = total_width
+            h = max(h1, h2)
         elif self.op == CompositionOp.IN:
-            min_width = min(w1_min, w2_min)
-            max_width = max(w1_max, w2_max)
-            min_height = min(h1_min, h2_min)
-            max_height = max(h1_max, h2_max)
+            w = max(w1, w2)
+            h = max(h1, h2)
+            self.sub_comp1_percent = 0.5
+        elif self.op == CompositionOp.NONE:
+            w, h = w1, h1
+            self.sub_comp1_percent = 1.0
         else:
-            raise ValueError("Composition operation not set")
+            raise ValueError(f"Unknown composition operation: {self.op}")
 
-        return (min_width, max_width, min_height, max_height)
+        return (w, h)
 
-    def can_fit(self, target_w_ratio, target_h_ratio):
-        """
-        Returns True if this composition can accommodate the given width/height ratios
-        (relative to its natural dimensions) without violating any child limits.
-        """
-        if self.is_leaf():
-            g = self.leaf_glyph
-            return (g.min_width_ratio <= target_w_ratio <= g.max_width_ratio and
-                    g.min_height_ratio <= target_h_ratio <= g.max_height_ratio)
-
-        # Recursive: get limits of sub-compositions
-        w1_min, w1_max, h1_min, h1_max = self.sub_comp1.get_stretching_limits()
-        w2_min, w2_max, h2_min, h2_max = self.sub_comp2.get_stretching_limits()
-
-        # Check composition constraints
-        if self.op == CompositionOp.HORZ:
-            # Target width is shared across the two children
-            # (simplified: just check if total fits)
-            can_w = (w1_min + w2_min <= target_w_ratio <= w1_max + w2_max)
-            can_h = (max(h1_min, h2_min) <= target_h_ratio <= min(h1_max, h2_max))
-
-        elif self.op == CompositionOp.VERT:
-            can_h = (h1_min + h2_min <= target_h_ratio <= h1_max + h2_max)
-            can_w = (max(w1_min, w2_min) <= target_w_ratio <= min(w1_max, w2_max))
-
-        elif self.op == CompositionOp.IN:
-            can_w = (min(w1_min, w2_min) <= target_w_ratio <= max(w1_max, w2_max))
-            can_h = (min(h1_min, h2_min) <= target_h_ratio <= max(h1_max, h2_max))
-        else:
-            raise ValueError("Composition operation not set")
-
-        return can_w and can_h
-        """
-        Recursively determine the allowable width and height ratio ranges
-        for this composition node.
-        Returns (min_width_ratio, max_width_ratio, min_height_ratio, max_height_ratio)
-        """
-        if self.is_leaf():
-            g = self.leaf_glyph
-            return (g.min_width_ratio, g.max_width_ratio,
-                    g.min_height_ratio, g.max_height_ratio)
-
-        # Recursively get child limits
-        w1_min, w1_max, h1_min, h1_max = self.sub_comp1.get_stretching_limits()
-        w2_min, w2_max, h2_min, h2_max = self.sub_comp2.get_stretching_limits()
-
-        if self.op == CompositionOp.HORZ:
-            # Horizontal stack: widths add, heights must match
-            min_width = w1_min + w2_min
-            max_width = w1_max + w2_max
-            min_height = max(h1_min, h2_min)
-            max_height = min(h1_max, h2_max)
-
-        elif self.op == CompositionOp.VERT:
-            # Vertical stack: heights add, widths must match
-            min_height = h1_min + h2_min
-            max_height = h1_max + h2_max
-            min_width = max(w1_min, w2_min)
-            max_width = min(w1_max, w2_max)
-
-        elif self.op == CompositionOp.IN:
-            # Nested composition: constrained by outer glyph
-            # Use inner’s flexibility limited by outer’s interior space
-            min_width = min(w1_min, w2_min)
-            max_width = max(w1_max, w2_max)
-            min_height = min(h1_min, h2_min)
-            max_height = max(h1_max, h2_max)
-
-        else:
-            raise ValueError("Composition operation not set")
-
-        return (min_width, max_width, min_height, max_height)
-
-    def is_hollow(self):
-        return self.is_leaf() and self.leaf_glyph.is_hollow
 
     def calc_constructions(self):
         if self.is_leaf():
             self.op = CompositionOp.NONE
+            self.sub_comp1_percent = 1.0
             return
-        
+
+        # Recursively compute child constructions
         self.sub_comp1.calc_constructions()
         self.sub_comp2.calc_constructions()
 
-        # if the outer comp is hollow
-        # and the comp that would be inside is not also doing a nesting in
-        # then we can do nesting here
+        # Hollow nesting check
         if self.sub_comp1.is_hollow() and self.sub_comp2.op != CompositionOp.IN:
             self.op = CompositionOp.IN
+            self.sub_comp1_percent = 0.5
             return
 
-        # now we need to check if the horozontal or the vertical will cause less stretching problems
-        stretch1 = self.sub_comp1.get_stretching_limits()
-        stretch2 = self.sub_comp2.get_stretching_limits()
+        # --- get child sizes ---
+        w1, h1 = self.sub_comp1.get_composition_side_ratio()
+        w2, h2 = self.sub_comp2.get_composition_side_ratio()
 
-        # TODO: need to calculate here which vertical or horizontal to do
-        # also calculate the perportions of the square that will be assigned to each half
+        # --- vertical stacking distortion ---
+        vert_total_height = h1 + h2
+        vert_sub1_percent = h1 / vert_total_height if vert_total_height != 0 else 0.5
+        vert_sub2_percent = h2 / vert_total_height if vert_total_height != 0 else 0.5
+        vert_scale_x = 1 / max(w1, w2)
+        vert_dist1 = max(vert_scale_x, vert_sub1_percent) / min(vert_scale_x, vert_sub1_percent)
+        vert_dist2 = max(vert_scale_x, vert_sub2_percent) / min(vert_scale_x, vert_sub2_percent)
+        vert_max_distortion = max(vert_dist1, vert_dist2)
+
+        # --- horizontal stacking distortion ---
+        horz_total_width = w1 + w2
+        horz_sub1_percent = w1 / horz_total_width if horz_total_width != 0 else 0.5
+        horz_sub2_percent = w2 / horz_total_width if horz_total_width != 0 else 0.5
+        horz_scale_y = 1 / max(h1, h2)
+        horz_dist1 = max(horz_scale_y, horz_sub1_percent) / min(horz_scale_y, horz_sub1_percent)
+        horz_dist2 = max(horz_scale_y, horz_sub2_percent) / min(horz_scale_y, horz_sub2_percent)
+        horz_max_distortion = max(horz_dist1, horz_dist2)
+
+        # --- pick stacking with less distortion ---
+        if vert_max_distortion <= horz_max_distortion:
+            self.op = CompositionOp.VERT
+            self.sub_comp1_percent = vert_sub1_percent
+        else:
+            self.op = CompositionOp.HORZ
+            self.sub_comp1_percent = horz_sub1_percent
+
+
+
+    def draw_svg(self, filename, size=200, stroke=2, gap=0.05):
+        """
+        Draws this composition as an independent SVG.
+        - size: final image size in pixels (square)
+        - stroke: stroke width in pixels
+        - gap: fraction of square size to leave as gap between stacked glyphs
+        """
+        dwg = svgwrite.Drawing(filename, size=(size, size))
+
+        def draw_node(comp, x, y, w, h):
+            """
+            Recursive helper to draw a composition node.
+            - comp: current Composition
+            - x, y: top-left coordinates
+            - w, h: width and height to draw this node
+            """
+            # Add a tiny gap for stacked compositions
+            gap_w = w * gap
+            gap_h = h * gap
+            draw_w = w - gap_w
+            draw_h = h - gap_h
+            offset_x = x + gap_w / 2
+            offset_y = y + gap_h / 2
+
+            if comp.is_leaf():
+                path = comp.leaf_glyph.path
+                # Scale path to fit draw_w x draw_h
+                scale_x = draw_w / comp.leaf_glyph.width
+                scale_y = draw_h / comp.leaf_glyph.height
+                # Flip Y for SVG coordinates
+                path = path.scaled(scale_x, -scale_y)
+                # Translate to top-left of allocated box
+                transformed_path = path.translated(complex(offset_x, offset_y + draw_h))
+                dwg.add(dwg.path(d=transformed_path.d(), stroke='black', fill='none', stroke_width=stroke))
+
+
+            elif comp.op == CompositionOp.VERT:
+                # Vertical stack: divide height according to sub_comp1_percent
+                h1 = draw_h * comp.sub_comp1_percent
+                h2 = draw_h - h1
+                draw_node(comp.sub_comp1, offset_x, offset_y, draw_w, h1)
+                draw_node(comp.sub_comp2, offset_x, offset_y + h1, draw_w, h2)
+            elif comp.op == CompositionOp.HORZ:
+                # Horizontal stack: divide width according to sub_comp1_percent
+                w1 = draw_w * comp.sub_comp1_percent
+                w2 = draw_w - w1
+                draw_node(comp.sub_comp1, offset_x, offset_y, w1, draw_h)
+                draw_node(comp.sub_comp2, offset_x + w1, offset_y, w2, draw_h)
+            elif comp.op == CompositionOp.IN:
+                # IN operation: sub_comp2 is nested inside sub_comp1
+                # Apply inside margins from the leaf glyph (assume sub_comp1 is hollow)
+                outer = comp.sub_comp1
+                inner = comp.sub_comp2
+                if outer.is_leaf():
+                    m_top, m_right, m_bottom, m_left = outer.leaf_glyph.inside_margins
+                else:
+                    m_top = m_right = m_bottom = m_left = 0.05  # default margin if not leaf
+                # Convert margins to pixel space
+                inner_x = offset_x + draw_w * m_left
+                inner_y = offset_y + draw_h * m_top
+                inner_w = draw_w * (1 - m_left - m_right)
+                inner_h = draw_h * (1 - m_top - m_bottom)
+                draw_node(outer, offset_x, offset_y, draw_w, draw_h)
+                draw_node(inner, inner_x, inner_y, inner_w, inner_h)
+            else:
+                raise ValueError(f"Unknown composition operation: {comp.op}")
+
+        # Start recursive drawing
+        draw_node(self, 0, 0, size, size)
+        dwg.save()
 
 
 GLYPHS = {
     'w': Glyph('w', 
         'M 0 0 L 0 10 M 0 0 L 10 0 M 10 0 L 10 10',
         10,
-        5,
+        10,
         is_hollow=True),
     's': Glyph('s', 
         'M 0 0 L 0 10 M 0 0 L 10 0 M 10 0 L 10 10 M 0 10 L 10 10',
         10,
         10,
-        is_hollow=True)
+        is_hollow=True),
+    'g': Glyph('g', 
+        'M 11 12 L 11 52 M 0 22 L 11 12 M 11 12 L 17 0',
+        17,
+        52,
+        is_hollow=False)
 }
 
 comp = Composition(
-    sub_comp1=Composition(leaf_glyph=GLYPHS['w']),
+    sub_comp1=Composition(leaf_glyph=GLYPHS['g']),
     sub_comp2=Composition(leaf_glyph=GLYPHS['s'])
 )
 
 comp.calc_constructions()
-
-print(comp.sub_comp1.get_ratio_and_flex())
+comp.draw_svg('out.svg')
