@@ -1,6 +1,7 @@
 from svgpathtools import parse_path
 from svgpathtools import Path
 from enum import Enum
+import random
 import svgwrite
 import math
 
@@ -15,31 +16,32 @@ class Glyph:
     def __init__(self, 
                 name, 
                 path_str, 
-                width, 
-                height,
                 is_hollow=False,
                 inside_margins=[0.1, 0.1, 0.1, 0.1]):
         self.name = name
-        self.path = parse_path(path_str)
-        self.width = width
-        self.height = height
         self.is_hollow = is_hollow
         self.inside_margins = inside_margins
 
-        '''
-        # Mirror horizontally and vertically (flip both X and Y)
-        # Centered around the origin (0,0)
-        bbox = self.path.bbox()
-        width = bbox[2] - bbox[0]
-        height = bbox[3] - bbox[1]
+        self.path = parse_path(path_str)
         
-        # Move glyph so bottom-left is at origin before flipping
-        self.path = self.path.translated(-complex(bbox[0], bbox[1]))
-        # Flip horizontally and vertically
-        self.path = self.path.scaled(-1, -1)
-        # Move back into positive quadrant
-        self.path = self.path.translated(complex(width, height))
-        '''
+        minx, maxx, miny, maxy = self.path.bbox()
+        self.width = maxx - minx
+        self.height = maxy - miny
+
+        cx = self.width / 2
+        cy = self.height / 2
+        self.path = (
+            self.path
+            .translated(-complex(cx, cy))
+            .scaled(-1, -1)
+            .translated(complex(cx, cy))
+        )
+
+        self.path = self.path.scaled(-1, 1)
+
+        minx, maxx, miny, maxy= self.path.bbox()
+        self.path = self.path.translated(-complex(minx, miny))
+
         
 
 class Composition:
@@ -98,7 +100,7 @@ class Composition:
         self.sub_comp2.calc_constructions()
 
         # Hollow nesting check
-        if self.sub_comp1.is_hollow() and self.sub_comp2.op != CompositionOp.IN:
+        if self.sub_comp1.is_hollow():# and self.sub_comp2.op != CompositionOp.IN:
             self.op = CompositionOp.IN
             self.sub_comp1_percent = 0.5
             return
@@ -126,7 +128,7 @@ class Composition:
         horz_max_distortion = max(horz_dist1, horz_dist2)
 
         # --- pick stacking with less distortion ---
-        if vert_max_distortion <= horz_max_distortion:
+        if vert_max_distortion >= horz_max_distortion:
             self.op = CompositionOp.VERT
             self.sub_comp1_percent = vert_sub1_percent
         else:
@@ -210,25 +212,47 @@ class Composition:
 GLYPHS = {
     'w': Glyph('w', 
         'M 0 0 L 0 10 M 0 0 L 10 0 M 10 0 L 10 10',
-        10,
-        10,
         is_hollow=True),
     's': Glyph('s', 
         'M 0 0 L 0 10 M 0 0 L 10 0 M 10 0 L 10 10 M 0 10 L 10 10',
-        10,
-        10,
         is_hollow=True),
     'g': Glyph('g', 
-        'M 11 12 L 11 52 M 0 22 L 11 12 M 11 12 L 17 0',
-        17,
-        52,
+        'M 5 12 L 5 41 M 0 22 L 5 12 M 5 12 L 7 0',
+        is_hollow=False),
+    'm': Glyph('m', 
+        'M 22 2 L 22 4 M 0 4 L 0 2 M 22 2 L 0 2 M 7 1 L 15 1 M 8 0 L 14 0',
         is_hollow=False)
 }
 
-comp = Composition(
-    sub_comp1=Composition(leaf_glyph=GLYPHS['g']),
-    sub_comp2=Composition(leaf_glyph=GLYPHS['s'])
-)
+def create_glyph_tree(word):
+    random.seed(word)
+
+    comps = []
+    for i in range(len(word)):
+        if word[i] not in GLYPHS:
+            continue
+        comps.append(Composition(leaf_glyph=GLYPHS[word[i]]))
+
+    l = len(comps)
+    while l > 1:
+        idx = random.randint(0, l - 2)
+        comp1 = comps[idx]
+        comp2 = comps.pop(idx + 1)
+        newComp = Composition(
+            sub_comp1=comp1,
+            sub_comp2=comp2
+        )
+
+        comps[idx] = newComp
+        l = len(comps)
+
+    return comps[0]
+
+comp = create_glyph_tree('gwsgwsmgsgmgsmgs')
+# comp = Composition(
+#     sub_comp1=Composition(leaf_glyph=GLYPHS['w']),
+#     sub_comp2=Composition(leaf_glyph=GLYPHS['g'])
+# )
 
 comp.calc_constructions()
 comp.draw_svg('out.svg')
