@@ -269,11 +269,10 @@ GLYPHS = {
         'M 20 -34 C 23 -34 22 -47 22 -54 L 40 -54 L 40 -34',
         simplified_path_strs=['M 20 -34 C 23 -34 22 -47 22 -54 L 30 -54 L 30 -34 M 23 -51 C 24 -50 27 -47 29 -46 M 29 -44 C 28 -42 25 -40 23 -39'],
         is_hollow=True,
-        inside_margins=[0.05, 0.05, 0.05, 0.15]),
+        inside_margins=[0.1, 0.1, 0.05, 0.2]),
     'g': Glyph('g', 
-        'M 32 -24 C 41 -33 46 -45 48 -54 C 51 -43 57 -32 64 -24',
-        simplified_path_strs=['M 8 25 C 9 21 9 10.3333 9 3 M 4 7 C 5.6667 6.3333 7.3333 4.6667 9 3 C 10 1.6667 11 0.3333 11 -1',
-                            'M 28 -47 C 38 -48 42 -50 48 -54 C 55 -50 60 -48 67 -46'],
+        'M 8 25 C 9 21 9 10.3333 9 3 M 4 7 C 5.6667 6.3333 7.3333 4.6667 9 3 C 10 1.6667 11 0.3333 11 -1',
+        simplified_path_strs=['M 28 -47 C 38 -48 42 -50 48 -54 C 55 -50 60 -48 67 -46'],
         is_hollow=False),
     'h': Glyph('h', 
         'M 4 0 L 4 4 M 0 4 L 0 2 M 0 0 L 4 0',
@@ -342,8 +341,8 @@ def create_glyph_tree(word):
 
     l = len(comps)
     while l > 1:
-        idx = random.randint(0, l - 2)
-        # idx = l - 2
+        #idx = random.randint(0, l - 2)
+        idx = l - 2
         comp1 = comps[idx]
         comp2 = comps.pop(idx + 1)
         newComp = Composition(
@@ -380,4 +379,4 @@ def draw_sentence(sentence, filename, size=400, stroke=5, gap=0.02):
 
     
 
-draw_sentence('hello tehre friend', 'out.svg')
+draw_sentence('ws ghd vzd df vfgwvzd', 'out.svg', 200, 5, 0.05)
