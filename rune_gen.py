@@ -266,39 +266,76 @@ class Composition:
         draw_node(self, 0, 0, size, size)
         dwg.save()
 
-
 GLYPHS = {
-    'w': Glyph('w', 
+    's': Glyph('s', 
         'M 0 11 L 0 0 L 11 0 L 11 11 M 11 10 L 0 10',
         is_hollow=True,
         inside_margins=[0.05, 0.05, 0.15, 0.05]),
-    's': Glyph('s', 
-        'M 0 0 L 0 10 M 0 0 L 10 0 M 10 0 L 10 10 M 0 10 L 10 10',
+    'w': Glyph('w', 
+        'M 20 -34 C 23 -34 22 -47 22 -54 L 40 -54 L 40 -34',
+        simplified_path_strs=['M 20 -34 C 23 -34 22 -47 22 -54 L 30 -54 L 30 -34 M 23 -51 C 24 -50 27 -47 29 -46 M 29 -44 C 28 -42 25 -40 23 -39'],
         is_hollow=True),
     'g': Glyph('g', 
         'M 32 -24 C 41 -33 46 -45 48 -54 C 51 -43 57 -32 64 -24',
         simplified_path_strs=['M 8 25 C 9 21 9 10.3333 9 3 M 4 7 C 5.6667 6.3333 7.3333 4.6667 9 3 C 10 1.6667 11 0.3333 11 -1',
                             'M 28 -47 C 38 -48 42 -50 48 -54 C 55 -50 60 -48 67 -46'],
         is_hollow=False),
-    'm': Glyph('m', 
+    'h': Glyph('h', 
         'M 4 0 L 4 4 M 0 4 L 0 2 M 0 0 L 4 0',
         is_hollow=True),
-    'p': Glyph('p', 
+    'd': Glyph('d', 
         'M 20 15 C 17 22 13 26 6 33 M 28 31 C 22 31 16 31 7 32 M 29 33 C 28 31 26 28 25 25 M 14 19 C 12 22 11 24 8 27',
         is_hollow=False),
     'f': Glyph('f', 
-        'M 17 -15 C 16 -9 11 -4 6 -1 M 16 -12 L 23 -12 C 21 -4 16 3 4 7 M 18 -2 L 14 -5',
+        'M 31 -30 C 36.3333 -30 41.6667 -30 47 -30 M 47 -30 L 31 -46 M 39 -38 L 43 -42',
+        simplified_path_strs=['M 32 -33 C 47 -36 60 -40 73 -45 M 70 -33 C 57 -35 44 -40 32 -46',
+                            'M 35 -39 L 41 -39 M 39 -39 L 39 -48 M 37 -39 L 37 -59'],
         is_hollow=False),
-    'k': Glyph('k', 
+    'v': Glyph('v', 
         'M 6 13 L 6 -47 M 2 -53 C 6 -51 8 -49 9 -47 M 10 -51 L 59 -51 L 59 10 C 59 13 57 14 54 14 L 51 14',
-        simplified_path_strs=['M 12 -10 C 19 -22 24 -34 27 -48 M 12 -46 C 16 -35 20 -23 27 -13'],
+        simplified_path_strs=['M 39 -37 L 39 -75 M 41 -37 C 45 -37 44 -40 44 -75 M 42 -71 C 42 -76 41 -77 39 -78',
+                            'M 37 -62 L 37 -69 L 86 -69 C 86 -64 86 -62 79 -62'],
         is_hollow=True,
         inside_margins=[0.1, 0.1, 0.05, 0.15]),
-    'h': Glyph('h', 
+    'z': Glyph('z', 
         'M 13 0 C 14 -3 16 -1 16 -28 L 40 -28 L 40 -23 L 16 -23 M 29 -28 C 29 -29 29 -29 28 -30',
         is_hollow=True,
         inside_margins=[0.27, 0.02, 0.02, 0.15])
 }
+
+
+'''
+GLYPHS = {
+    'w': Glyph('w', 
+        'M 28 -98 C 30 -98 31 -73 28 -63 M 29 -95 L 52 -95 C 56 -95 57 -94 57 -91 L 57 -63',
+        is_hollow=True,
+        inside_margins=[0.13, 0.15, 0.05, 0.12]),
+    'z': Glyph('z', 
+        'M 31 -82 L 45 -73 M 37 -78 C 33 -71 35 -60 38 -45',
+        is_hollow=False),
+    'v': Glyph('v', 
+        'M 33 -94 C 41 -88 45 -83 45 -79 L 45 -35',
+        is_hollow=False),
+    'h': Glyph('h', 
+        'M 33 -52 L 33 -84 M 33 -99 L 64 -99 C 68 -99 71 -96 71 -93 L 71 -52',
+        is_hollow=True,
+        inside_margins=[0.13, 0.13, 0.02, 0.13]),
+    'd': Glyph('d', 
+        'M 16 -95 L 65 -95 C 65 -54 65 -50 67 -41',
+        is_hollow=True,
+        inside_margins=[0.1, 0.13, 0.02, 0.02]),
+    'g': Glyph('g', 
+        'M 48 -101 C 73 -89 69 -90 84 -26 M 47 -27 C 65 -29 73 -37 78 -51',
+        is_hollow=False),
+    'b': Glyph('b', 
+        'M 24 -103 L 61 -103 C 67 -103 69 -100 69 -97 L 69 -61 L 24 -61 M 69 -61 L 72 -61',
+        is_hollow=True,
+        inside_margins=[0.1, 0.13, 0.1, 0.02]),
+    'c': Glyph('c', 
+        'M 23 -129 L 72 -83 M 40 -113 C 33 -104 25 -97 24 -83 M 55 -99 C 63 -109 73 -118 71 -130',
+        is_hollow=False),
+}
+'''
 
 def create_glyph_tree(word):
     random.seed(word)
@@ -312,7 +349,7 @@ def create_glyph_tree(word):
     l = len(comps)
     while l > 1:
         idx = random.randint(0, l - 2)
-        idx = 0
+        #idx = l - 2
         comp1 = comps[idx]
         comp2 = comps.pop(idx + 1)
         newComp = Composition(
@@ -325,11 +362,6 @@ def create_glyph_tree(word):
 
     return comps[0]
 
-comp = create_glyph_tree('ggggggggggggggggggggggggg')
-# comp = Composition(
-#     sub_comp1=Composition(leaf_glyph=GLYPHS['w']),
-#     sub_comp2=Composition(leaf_glyph=GLYPHS['g'])
-# )
-
+comp = create_glyph_tree('vhdcwc')
 comp.calc_constructions()
 comp.draw_svg('out.svg')
