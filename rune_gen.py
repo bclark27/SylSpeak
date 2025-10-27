@@ -18,32 +18,95 @@ class Glyph:
                 path_str, 
                 is_hollow=False,
                 inside_margins=[0.15, 0.15, 0.15, 0.15], # top right bot left
-                tall_path_str=None,
-                wide_path_str=None
+                simplified_path_strs=[]
                 ):
         self.name = name
         self.is_hollow = is_hollow
         self.inside_margins = inside_margins
 
-        self.path = parse_path(path_str)
-        
+        self.path = Glyph.normalize_path(path_str)
+
         minx, maxx, miny, maxy = self.path.bbox()
         self.width = maxx - minx
         self.height = maxy - miny
 
-        cx = self.width / 2
-        cy = self.height / 2
-        self.path = (
-            self.path
+        self.simplified_paths = []
+        for s in simplified_path_strs:
+            self.simplified_paths.append(Glyph.normalize_path(s))
+
+
+    def normalize_path(path):
+
+        if path is None:
+            return None
+
+        p = parse_path(path)
+        
+        minx, maxx, miny, maxy = p.bbox()
+        width = maxx - minx
+        height = maxy - miny
+
+        cx = width / 2
+        cy = height / 2
+        p = (
+            p
             .translated(-complex(cx, cy))
             .scaled(-1, -1)
             .translated(complex(cx, cy))
         )
 
-        self.path = self.path.scaled(-1, 1)
+        p = p.scaled(-1, 1)
 
-        minx, maxx, miny, maxy= self.path.bbox()
-        self.path = self.path.translated(-complex(minx, miny))
+        minx, maxx, miny, maxy= p.bbox()
+        p = p.translated(-complex(minx, miny))
+        return p
+
+    def closest_aspect_ratio_index(paths, ref_hw):
+        """
+        Returns the index in hw_list whose aspect ratio (h/w)
+        is closest to that of ref_hw (reference height/width tuple).
+        """
+        ref_h, ref_w = ref_hw
+        ref_ratio = ref_h / ref_w
+
+        closest_idx = None
+        closest_diff = float('inf')
+
+        for i, p in enumerate(paths):
+            if p is None:
+                continue
+            minx, maxx, miny, maxy = p.bbox()
+            w = maxx - minx
+            h = maxy - miny
+            ratio = h / w
+            diff = abs(ratio - ref_ratio)
+            if diff < closest_diff:
+                closest_diff = diff
+                closest_idx = i
+
+        return closest_idx
+
+    def get_best_path(self, ref_hw):
+        options = [self.path] + self.simplified_paths
+        return options[Glyph.closest_aspect_ratio_index(options, ref_hw)]
+
+    def draw(self, dwg, draw_w, draw_h, x, y, stroke, can_simplify):
+        
+        p = self.path
+        if can_simplify:
+            p = self.get_best_path((draw_h, draw_w))
+
+        minx, maxx, miny, maxy = p.bbox()
+        width = maxx - minx
+        height = maxy - miny
+
+        scale_x = draw_w / width
+        scale_y = draw_h / height
+        # Flip Y for SVG coordinates
+        p = p.scaled(scale_x, -scale_y)
+        # Translate to top-left of allocated box
+        transformed_path = p.translated(complex(x, y + draw_h))
+        dwg.add(dwg.path(d=transformed_path.d(), stroke='black', fill='none', stroke_width=stroke))
 
         
 
@@ -150,7 +213,7 @@ class Composition:
         dwg = svgwrite.Drawing(filename, size=(size, size))
         dwg.add(dwg.rect(insert=(0, 0), size=(size, size), fill='white'))
 
-        def draw_node(comp, x, y, w, h):
+        def draw_node(comp, x, y, w, h, glyph_is_filled=False):
             """
             Recursive helper to draw a composition node.
             - comp: current Composition
@@ -166,16 +229,7 @@ class Composition:
             offset_y = y + gap_h / 2
 
             if comp.is_leaf():
-                path = comp.leaf_glyph.path
-                # Scale path to fit draw_w x draw_h
-                scale_x = draw_w / comp.leaf_glyph.width
-                scale_y = draw_h / comp.leaf_glyph.height
-                # Flip Y for SVG coordinates
-                path = path.scaled(scale_x, -scale_y)
-                # Translate to top-left of allocated box
-                transformed_path = path.translated(complex(offset_x, offset_y + draw_h))
-                dwg.add(dwg.path(d=transformed_path.d(), stroke='black', fill='none', stroke_width=stroke))
-
+                comp.leaf_glyph.draw(dwg, draw_w, draw_h, offset_x, offset_y, stroke, not glyph_is_filled)
 
             elif comp.op == CompositionOp.VERT:
                 # Vertical stack: divide height according to sub_comp1_percent
@@ -203,7 +257,7 @@ class Composition:
                 inner_y = offset_y + draw_h * m_top
                 inner_w = draw_w * (1 - m_left - m_right)
                 inner_h = draw_h * (1 - m_top - m_bottom)
-                draw_node(outer, offset_x, offset_y, draw_w, draw_h)
+                draw_node(outer, offset_x, offset_y, draw_w, draw_h, True)
                 draw_node(inner, inner_x, inner_y, inner_w, inner_h)
             else:
                 raise ValueError(f"Unknown composition operation: {comp.op}")
@@ -222,7 +276,9 @@ GLYPHS = {
         'M 0 0 L 0 10 M 0 0 L 10 0 M 10 0 L 10 10 M 0 10 L 10 10',
         is_hollow=True),
     'g': Glyph('g', 
-        'M 8 25 C 9 21 9 10.3333 9 3 M 4 7 C 5.6667 6.3333 7.3333 4.6667 9 3 C 10 1.6667 11 0.3333 11 -1',
+        'M 32 -24 C 41 -33 46 -45 48 -54 C 51 -43 57 -32 64 -24',
+        simplified_path_strs=['M 8 25 C 9 21 9 10.3333 9 3 M 4 7 C 5.6667 6.3333 7.3333 4.6667 9 3 C 10 1.6667 11 0.3333 11 -1',
+                            'M 28 -47 C 38 -48 42 -50 48 -54 C 55 -50 60 -48 67 -46'],
         is_hollow=False),
     'm': Glyph('m', 
         'M 4 0 L 4 4 M 0 4 L 0 2 M 0 0 L 4 0',
@@ -235,7 +291,7 @@ GLYPHS = {
         is_hollow=False),
     'k': Glyph('k', 
         'M 6 13 L 6 -47 M 2 -53 C 6 -51 8 -49 9 -47 M 10 -51 L 59 -51 L 59 10 C 59 13 57 14 54 14 L 51 14',
-        tall_path_str='M 12 -10 C 19 -22 24 -34 27 -48 M 12 -46 C 16 -35 20 -23 27 -13',
+        simplified_path_strs=['M 12 -10 C 19 -22 24 -34 27 -48 M 12 -46 C 16 -35 20 -23 27 -13'],
         is_hollow=True,
         inside_margins=[0.1, 0.1, 0.05, 0.15]),
     'h': Glyph('h', 
@@ -256,6 +312,7 @@ def create_glyph_tree(word):
     l = len(comps)
     while l > 1:
         idx = random.randint(0, l - 2)
+        idx = 0
         comp1 = comps[idx]
         comp2 = comps.pop(idx + 1)
         newComp = Composition(
@@ -268,7 +325,7 @@ def create_glyph_tree(word):
 
     return comps[0]
 
-comp = create_glyph_tree('kk')
+comp = create_glyph_tree('ggggggggggggggggggggggggg')
 # comp = Composition(
 #     sub_comp1=Composition(leaf_glyph=GLYPHS['w']),
 #     sub_comp2=Composition(leaf_glyph=GLYPHS['g'])
