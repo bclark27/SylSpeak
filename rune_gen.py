@@ -17,7 +17,10 @@ class Glyph:
                 name, 
                 path_str, 
                 is_hollow=False,
-                inside_margins=[0.1, 0.1, 0.1, 0.1]):
+                inside_margins=[0.15, 0.15, 0.15, 0.15], # top right bot left
+                tall_path_str=None,
+                wide_path_str=None
+                ):
         self.name = name
         self.is_hollow = is_hollow
         self.inside_margins = inside_margins
@@ -137,7 +140,7 @@ class Composition:
 
 
 
-    def draw_svg(self, filename, size=200, stroke=2, gap=0.05):
+    def draw_svg(self, filename, size=400, stroke=5, gap=0.02):
         """
         Draws this composition as an independent SVG.
         - size: final image size in pixels (square)
@@ -145,6 +148,7 @@ class Composition:
         - gap: fraction of square size to leave as gap between stacked glyphs
         """
         dwg = svgwrite.Drawing(filename, size=(size, size))
+        dwg.add(dwg.rect(insert=(0, 0), size=(size, size), fill='white'))
 
         def draw_node(comp, x, y, w, h):
             """
@@ -211,17 +215,33 @@ class Composition:
 
 GLYPHS = {
     'w': Glyph('w', 
-        'M 0 0 L 0 10 M 0 0 L 10 0 M 10 0 L 10 10',
-        is_hollow=True),
+        'M 0 11 L 0 0 L 11 0 L 11 11 M 11 10 L 0 10',
+        is_hollow=True,
+        inside_margins=[0.05, 0.05, 0.15, 0.05]),
     's': Glyph('s', 
         'M 0 0 L 0 10 M 0 0 L 10 0 M 10 0 L 10 10 M 0 10 L 10 10',
         is_hollow=True),
     'g': Glyph('g', 
-        'M 5 12 L 5 41 M 0 22 L 5 12 M 5 12 L 7 0',
+        'M 8 25 C 9 21 9 10.3333 9 3 M 4 7 C 5.6667 6.3333 7.3333 4.6667 9 3 C 10 1.6667 11 0.3333 11 -1',
         is_hollow=False),
     'm': Glyph('m', 
-        'M 22 2 L 22 4 M 0 4 L 0 2 M 22 2 L 0 2 M 7 1 L 15 1 M 8 0 L 14 0',
-        is_hollow=False)
+        'M 4 0 L 4 4 M 0 4 L 0 2 M 0 0 L 4 0',
+        is_hollow=True),
+    'p': Glyph('p', 
+        'M 20 15 C 17 22 13 26 6 33 M 28 31 C 22 31 16 31 7 32 M 29 33 C 28 31 26 28 25 25 M 14 19 C 12 22 11 24 8 27',
+        is_hollow=False),
+    'f': Glyph('f', 
+        'M 17 -15 C 16 -9 11 -4 6 -1 M 16 -12 L 23 -12 C 21 -4 16 3 4 7 M 18 -2 L 14 -5',
+        is_hollow=False),
+    'k': Glyph('k', 
+        'M 6 13 L 6 -47 M 2 -53 C 6 -51 8 -49 9 -47 M 10 -51 L 59 -51 L 59 10 C 59 13 57 14 54 14 L 51 14',
+        tall_path_str='M 12 -10 C 19 -22 24 -34 27 -48 M 12 -46 C 16 -35 20 -23 27 -13',
+        is_hollow=True,
+        inside_margins=[0.1, 0.1, 0.05, 0.15]),
+    'h': Glyph('h', 
+        'M 13 0 C 14 -3 16 -1 16 -28 L 40 -28 L 40 -23 L 16 -23 M 29 -28 C 29 -29 29 -29 28 -30',
+        is_hollow=True,
+        inside_margins=[0.27, 0.02, 0.02, 0.15])
 }
 
 def create_glyph_tree(word):
@@ -248,7 +268,7 @@ def create_glyph_tree(word):
 
     return comps[0]
 
-comp = create_glyph_tree('gwsgwsmgsgmgsmgs')
+comp = create_glyph_tree('kk')
 # comp = Composition(
 #     sub_comp1=Composition(leaf_glyph=GLYPHS['w']),
 #     sub_comp2=Composition(leaf_glyph=GLYPHS['g'])
