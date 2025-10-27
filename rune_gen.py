@@ -201,18 +201,13 @@ class Composition:
             self.op = CompositionOp.HORZ
             self.sub_comp1_percent = horz_sub1_percent
 
-
-
-    def draw_svg(self, filename, size=400, stroke=5, gap=0.02):
+    def draw_svg(self, dwg, pos_x, pos_y, size=400, stroke=5, gap=0.02):
         """
         Draws this composition as an independent SVG.
         - size: final image size in pixels (square)
         - stroke: stroke width in pixels
         - gap: fraction of square size to leave as gap between stacked glyphs
         """
-        dwg = svgwrite.Drawing(filename, size=(size, size))
-        dwg.add(dwg.rect(insert=(0, 0), size=(size, size), fill='white'))
-
         def draw_node(comp, x, y, w, h, glyph_is_filled=False):
             """
             Recursive helper to draw a composition node.
@@ -263,8 +258,7 @@ class Composition:
                 raise ValueError(f"Unknown composition operation: {comp.op}")
 
         # Start recursive drawing
-        draw_node(self, 0, 0, size, size)
-        dwg.save()
+        draw_node(self, pos_x, pos_y, size, size)
 
 GLYPHS = {
     's': Glyph('s', 
@@ -274,7 +268,8 @@ GLYPHS = {
     'w': Glyph('w', 
         'M 20 -34 C 23 -34 22 -47 22 -54 L 40 -54 L 40 -34',
         simplified_path_strs=['M 20 -34 C 23 -34 22 -47 22 -54 L 30 -54 L 30 -34 M 23 -51 C 24 -50 27 -47 29 -46 M 29 -44 C 28 -42 25 -40 23 -39'],
-        is_hollow=True),
+        is_hollow=True,
+        inside_margins=[0.05, 0.05, 0.05, 0.15]),
     'g': Glyph('g', 
         'M 32 -24 C 41 -33 46 -45 48 -54 C 51 -43 57 -32 64 -24',
         simplified_path_strs=['M 8 25 C 9 21 9 10.3333 9 3 M 4 7 C 5.6667 6.3333 7.3333 4.6667 9 3 C 10 1.6667 11 0.3333 11 -1',
@@ -303,8 +298,8 @@ GLYPHS = {
         inside_margins=[0.27, 0.02, 0.02, 0.15])
 }
 
-
 '''
+
 GLYPHS = {
     'w': Glyph('w', 
         'M 28 -98 C 30 -98 31 -73 28 -63 M 29 -95 L 52 -95 C 56 -95 57 -94 57 -91 L 57 -63',
@@ -336,7 +331,6 @@ GLYPHS = {
         is_hollow=False),
 }
 '''
-
 def create_glyph_tree(word):
     random.seed(word)
 
@@ -349,7 +343,7 @@ def create_glyph_tree(word):
     l = len(comps)
     while l > 1:
         idx = random.randint(0, l - 2)
-        #idx = l - 2
+        # idx = l - 2
         comp1 = comps[idx]
         comp2 = comps.pop(idx + 1)
         newComp = Composition(
@@ -362,6 +356,28 @@ def create_glyph_tree(word):
 
     return comps[0]
 
-comp = create_glyph_tree('vhdcwc')
-comp.calc_constructions()
-comp.draw_svg('out.svg')
+def draw_sentence(sentence, filename, size=400, stroke=5, gap=0.02):
+    words = sentence.split(' ')
+    
+    word_trees = []
+    for w in words:
+        t = create_glyph_tree(w)
+        t.calc_constructions()
+        word_trees.append(t)
+
+    char_gap = size / 8
+    dims = ((size * len(words)) + ((len(words) - 1) * char_gap), size)
+    dwg = svgwrite.Drawing(filename, size=dims)
+    dwg.add(dwg.rect(insert=(0, 0), size=dims, fill='white'))
+
+    x = 0
+    for i in range(len(word_trees)):
+        t = word_trees[i]
+        t.draw_svg(dwg, x, 0, size, stroke, gap)
+        x += size + char_gap
+
+    dwg.save()
+
+    
+
+draw_sentence('hello tehre friend', 'out.svg')
