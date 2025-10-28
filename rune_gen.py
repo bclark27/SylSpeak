@@ -333,10 +333,13 @@ CHARACTERS = {
     'f': Character(Glyph(
         'M 31 -30 C 36.3333 -30 41.6667 -30 47 -30 M 47 -30 L 31 -46 M 39 -38 L 43 -42',
         is_hollow=False)),
-    'sh': Character(Glyph(
-        'M 6 13 L 6 -47 M 2 -53 C 6 -51 8 -49 9 -47 M 10 -51 L 59 -51 L 59 10 C 59 13 57 14 54 14 L 51 14',
-        is_hollow=True,
-        padding=[0.1, 0.05, 0.05, 0.1])),
+    'sh': Character(
+        Glyph(
+                'M 6 13 L 6 -47 M 2 -53 C 6 -51 8 -49 9 -47 M 10 -51 L 59 -51 L 59 10 C 59 13 57 14 54 14 L 51 14',
+                is_hollow=True,
+                padding=[0.1, 0.05, 0.05, 0.1]
+            )
+        ),
     'z': Character(
             Glyph(
                 'M 40 -149 L 40 -103 C 33 -103 33 -93 40 -93 C 47 -93 47 -103 40 -103 M 27 -127 L 54 -127 M 20 -149 C 30 -127 30 -127 20 -106 M 61 -149 C 51 -127 51 -127 61 -106'
@@ -346,7 +349,30 @@ CHARACTERS = {
             Glyph(
                 'M 69 -94 L 69 -136 M 78 -104 L 43 -104 C 86 -140 39 -142 46 -125'
             )
+        ),
+    'n': Character(
+            Glyph(
+                'M 11 4 L 11 33 M 11 7 C 16 4 33 3 34 7 C 36 12 33.3333 23 33 31 C 33 34 36 34 36 31',
+                is_hollow=True,
+                padding=[0.1,0.15,0.02,0.07]
+            ),
+            simplified_glyphs=[
+                Glyph(
+                    'M 12 3 L 12 46 M 12 9 C 19 2 31 1 33 12 C 35 26 29 29 31 43 C 34 52 44 39 33 38 C 28 38 30 45 23 42',
+                    margin=[0.05,0.1,0.05,0.1]
+                ),
+            ]
+        ),
+    'm': Character(
+            Glyph(
+                'M 11 11 C 13 8 16 10 16 16 L 16 38 M 15 12 C 20 8 24 10 24 16 L 24 38 M 23 12 C 28 8 32 10 32 16 C 32 38 33 36 37 38 M 32 17 C 34 15 37 15 37 18 C 37 27 35 34 29 39',
+                margin=[0.05,0.1,0.05,0.1]
+            )
         )
+}
+
+SUB_CHARACTERS = {
+    'hh'
 }
 
 def segment_word(word, sequences):
@@ -370,12 +396,14 @@ def segment_word(word, sequences):
             i += len(best_match)
         else:
             # Skip one char if no match
+            result.append(word[i])
             i += 1
     return result
 
 #TODO: adda word finder, which searches for words and then tries to keep that character pre calculated and consistent
 
-def create_glyph_tree(word):
+
+def create_tree(word):
     segs = segment_word(word, CHARACTERS)
     comps = []
     for seg in segs:
@@ -396,13 +424,39 @@ def create_glyph_tree(word):
 
     return comps[0]
 
+def get_sub_character_tree(word):
+    segs = segment_word(word, SUB_CHARACTERS)
+    sub_char_trees = []
+    for seg in segs:
+        t = create_tree(seg)
+        t.calc_constructions()
+        sub_char_trees.append(t)
+
+    l = len(sub_char_trees)
+    while l > 1:
+        idx = l - 2
+        comp1 = sub_char_trees[idx]
+        comp2 = sub_char_trees.pop(idx + 1)
+        newComp = Composition(
+            sub_comp1=comp1,
+            sub_comp2=comp2
+        )
+
+        sub_char_trees[idx] = newComp
+        l = len(sub_char_trees)
+
+    sub_char_trees[0].calc_constructions(True)
+
+    return sub_char_trees[0]
+    
+
 def draw_sentence(sentence, filename, size=400, stroke=5):
     words = sentence.split(' ')
     
     word_trees = []
     for w in words:
-        t = create_glyph_tree(w)
-        t.calc_constructions()
+        t = create_tree(w)
+        t.calc_constructions(True)
         word_trees.append(t)
 
     char_gap = size / 8
@@ -419,5 +473,4 @@ def draw_sentence(sentence, filename, size=400, stroke=5):
     dwg.save()
 
     
-
-draw_sentence('gshjhcsd', 'out.svg', 200, 5)
+draw_sentence('ggshjhsncd shn', 'out.svg', 200, 5)
