@@ -14,14 +14,12 @@ class CompositionOp(Enum):
 # --- Glyph definition ---
 class Glyph:
     def __init__(self, 
-                name, 
                 path_str, 
                 is_hollow=False,
                 padding=[0.15, 0.15, 0.15, 0.15], # top right bot left (interior space)
                 margin=[0.05, 0.05, 0.05, 0.05], # top right bot left (outside)
                 translate=[0, 0], # x y (translate based on fraction of the width of the final area)
                 ):
-        self.name = name
         self.is_hollow = is_hollow
         self.padding = padding
         self.margin = margin
@@ -66,37 +64,6 @@ class Glyph:
         p = p.translated(-complex(minx, miny))
         return p
 
-    '''
-    def closest_aspect_ratio_index(paths, ref_hw):
-        """
-        Returns the index in hw_list whose aspect ratio (h/w)
-        is closest to that of ref_hw (reference height/width tuple).
-        """
-        ref_h, ref_w = ref_hw
-        ref_ratio = ref_h / ref_w
-
-        closest_idx = None
-        closest_diff = float('inf')
-
-        for i, p in enumerate(paths):
-            if p is None:
-                continue
-            minx, maxx, miny, maxy = p.bbox()
-            w = maxx - minx
-            h = maxy - miny
-            ratio = h / w
-            diff = abs(ratio - ref_ratio)
-            if diff < closest_diff:
-                closest_diff = diff
-                closest_idx = i
-
-        return closest_idx
-
-    def get_best_path(self, ref_hw):
-        options = [self.path] + self.simplified_paths
-        return options[Glyph.closest_aspect_ratio_index(options, ref_hw)]
-
-    '''
     def draw(self, dwg, draw_w, draw_h, x, y, stroke):
 
         p = self.path
@@ -126,25 +93,66 @@ class Glyph:
         
         dwg.add(dwg.path(d=p.d(), stroke='black', fill='none', stroke_width=stroke))
 
-        
+
+class Character:
+    def __init__(self, main_glyph, simplified_glyphs=[]):
+        self.main_glyph = main_glyph
+        self.simplified_glyphs = simplified_glyphs
+
+    def draw(self, dwg, draw_w, draw_h, x, y, stroke, can_simplify):
+        if can_simplify:
+            best_fit = self.get_best_glyph((draw_h, draw_w))
+            best_fit.draw(dwg, draw_w, draw_h, x, y, stroke)
+        else:
+            self.main_glyph.draw(dwg, draw_w, draw_h, x, y, stroke)
+
+    def closest_aspect_ratio_index(glyphs, ref_hw):
+        """
+        Returns the index in hw_list whose aspect ratio (h/w)
+        is closest to that of ref_hw (reference height/width tuple).
+        """
+        ref_h, ref_w = ref_hw
+        ref_ratio = ref_h / ref_w
+
+        closest_idx = None
+        closest_diff = float('inf')
+
+        for i, g in enumerate(glyphs):
+            if g is None:
+                continue
+            w = g.width
+            h = g.height
+            ratio = h / w
+            diff = abs(ratio - ref_ratio)
+            if diff < closest_diff:
+                closest_diff = diff
+                closest_idx = i
+
+        return closest_idx
+
+    def get_best_glyph(self, ref_hw):
+        options = [self.main_glyph] + self.simplified_glyphs
+        return options[Character.closest_aspect_ratio_index(options, ref_hw)]
+
 
 class Composition:
-    def __init__(self, op=None, sub_comp1=None, sub_comp2=None, leaf_glyph=None):
+    def __init__(self, op=None, sub_comp1=None, sub_comp2=None, leaf_char=None):
         self.op = op
         self.sub_comp1 = sub_comp1
         self.sub_comp2 = sub_comp2
-        self.leaf_glyph = leaf_glyph
+        self.leaf_char = leaf_char
         self.sub_comp1_percent = 0.5
+        self.computed = False
 
     def is_leaf(self):
-        return self.leaf_glyph is not None
+        return self.leaf_char is not None
 
     def is_hollow(self):
-        return self.is_leaf() and self.leaf_glyph.is_hollow
+        return self.is_leaf() and self.leaf_char.main_glyph.is_hollow
 
     def get_composition_side_ratio(self):
         if self.is_leaf():
-            return (self.leaf_glyph.width, self.leaf_glyph.height)
+            return (self.leaf_char.main_glyph.width, self.leaf_char.main_glyph.height)
 
         # Recursively get child sizes
         w1, h1 = self.sub_comp1.get_composition_side_ratio()
@@ -173,7 +181,13 @@ class Composition:
         return (w, h)
 
 
-    def calc_constructions(self):
+    def calc_constructions(self, donot_recompute=False):
+
+        if self.computed and donot_recompute:
+            return
+
+        self.computed = True
+
         if self.is_leaf():
             self.op = CompositionOp.NONE
             self.sub_comp1_percent = 1.0
@@ -225,7 +239,7 @@ class Composition:
         - size: final image size in pixels (square)
         - stroke: stroke width in pixels
         """
-        def draw_node(comp, x, y, w, h, glyph_is_filled=False):
+        def draw_node(comp, x, y, w, h, char_is_empty=True):
             """
             Recursive helper to draw a composition node.
             - comp: current Composition
@@ -235,7 +249,7 @@ class Composition:
             # Add a tiny gap for stacked compositions
 
             if comp.is_leaf():
-                comp.leaf_glyph.draw(dwg, w, h, x, y, stroke)
+                comp.leaf_char.draw(dwg, w, h, x, y, stroke, char_is_empty)
 
             elif comp.op == CompositionOp.VERT:
                 # Vertical stack: divide height according to sub_comp1_percent
@@ -255,8 +269,8 @@ class Composition:
                 outer = comp.sub_comp1
                 inner = comp.sub_comp2
                 if outer.is_leaf():
-                    padding = outer.leaf_glyph.padding
-                    margin = outer.leaf_glyph.margin
+                    padding = outer.leaf_char.main_glyph.padding
+                    margin = outer.leaf_char.main_glyph.margin
                 else:
                     padding = [0.05,0.05,0.05,0.05]  # default if not leaf
                     margin = [0.05,0.05,0.05,0.05]  # default if not leaf
@@ -271,9 +285,7 @@ class Composition:
                 inner_w = (w * (1 - margin[1] - margin[3])) * (1 - padding[1] - padding[3])
                 inner_h = (h * (1 - margin[0] - margin[2])) * (1 - padding[0] - padding[2])
 
-                print(inner_h)
-
-                draw_node(outer, x, y, w, h, True)
+                draw_node(outer, x, y, w, h, False)
                 draw_node(inner, inner_x, inner_y, inner_w, inner_h)
             else:
                 raise ValueError(f"Unknown composition operation: {comp.op}")
@@ -281,74 +293,62 @@ class Composition:
         # Start recursive drawing
         draw_node(self, pos_x, pos_y, size, size)
 
-GLYPHS = {
-    's': Glyph('s', 
+CHARACTERS = {
+    's': Character(Glyph(
         'M 0 11 L 0 0 L 11 0 L 11 11 M 11 10 L 0 10',
         is_hollow=True,
-        padding=[0.05, 0.05, 0.15, 0.05]),
-    'w': Glyph('w', 
+        padding=[0.05, 0.05, 0.15, 0.05])),
+    'w': Character(Glyph( 
         'M 20 -34 C 23 -34 22 -47 22 -54 L 40 -54 L 40 -34',
         is_hollow=True,
-        padding=[0.1, 0.1, 0.05, 0.2]),
-    'g': Glyph('g', 
-        'M 8 25 C 9 21 9 10.3333 9 3 M 4 7 C 5.6667 6.3333 7.3333 4.6667 9 3 C 10 1.6667 11 0.3333 11 -1',
-        is_hollow=False),
-    'h': Glyph('h', 
+        padding=[0.1, 0.1, 0.05, 0.2])),
+    'g': Character(
+            Glyph(
+                'M 24 -67 C 37 -77 43 -86 48 -98 C 53 -86 59 -78 71 -67',
+                is_hollow=False),
+            simplified_glyphs=[
+                Glyph(
+                'M 8 25 C 9 21 9 10.3333 9 3 M 4 7 C 5.6667 6.3333 7.3333 4.6667 9 3 C 10 1.6667 11 0.3333 11 -1',
+                is_hollow=False),
+            ]
+        ),
+    'h': Character(Glyph(
         'M 4 0 L 4 4 M 0 4 L 0 2 M 0 0 L 4 0',
-        is_hollow=True),
-    'd': Glyph('d', 
+        is_hollow=True)),
+    'd': Character(Glyph(
         'M 20 15 C 17 22 13 26 6 33 M 28 31 C 22 31 16 31 7 32 M 29 33 C 28 31 26 28 25 25 M 14 19 C 12 22 11 24 8 27',
-        is_hollow=False),
-    'f': Glyph('f', 
+        is_hollow=False)),
+    'f': Character(Glyph(
         'M 31 -30 C 36.3333 -30 41.6667 -30 47 -30 M 47 -30 L 31 -46 M 39 -38 L 43 -42',
-        is_hollow=False),
-    'v': Glyph('v', 
+        is_hollow=False)),
+    'v': Character(Glyph(
         'M 6 13 L 6 -47 M 2 -53 C 6 -51 8 -49 9 -47 M 10 -51 L 59 -51 L 59 10 C 59 13 57 14 54 14 L 51 14',
         is_hollow=True,
-        padding=[0.1, 0.05, 0.05, 0.1]),
-    'z': Glyph('z', 
+        padding=[0.1, 0.05, 0.05, 0.1])),
+    'z': Character(Glyph(
         'M 13 0 C 14 -3 16 -1 16 -28 L 40 -28 L 40 -23 L 16 -23 M 29 -28 C 29 -29 29 -29 28 -30',
         is_hollow=True,
-        padding=[0.27, 0.02, 0.02, 0.15]),
-    't': Glyph('t', 
+        padding=[0.27, 0.02, 0.02, 0.15])),
+    't': Character(Glyph(
         'M 62 -102 C 65 -100 69 -94 70 -91 M 62 -86 C 66 -85 68 -83 70 -80 M 64 -54 C 65 -58 67 -62 70 -66',
         is_hollow=False,
         margin=[0.2,0,0.2,0],
-        translate=[0, 0])
+        translate=[0, 0]))
 }
 
-'''
-
-GLYPHS = {
-    'r': Glyph('r', 
-        'M 45 -69 L 47 -67 L 45 -65 M 47 -69 L 49 -67 L 47 -65 M 49 -69 L 51 -67 L 49 -65',
-        is_hollow=False,
-        padding=[0.13, 0.15, 0.05, 0.12]),
-    's': Glyph('s', 
-        'M 0 11 L 0 0 L 11 0 L 11 11 M 11 10 L 0 10',
-        is_hollow=True,
-        padding=[0.05, 0.05, 0.15, 0.05]),
-    'g': Glyph('g', 
-        'M 8 25 C 9 21 9 10.3333 9 3 M 4 7 C 5.6667 6.3333 7.3333 4.6667 9 3 C 10 1.6667 11 0.3333 11 -1',
-        is_hollow=False),
-    'v': Glyph('v', 
-        'M 6 13 L 6 -47 M 2 -53 C 6 -51 8 -49 9 -47 M 10 -51 L 59 -51 L 59 10 C 59 13 57 14 54 14 L 51 14',
-        is_hollow=True,
-        padding=[0.1, 0.1, 0.05, 0.15]),
+SEQUENCES = {
+    "vggg",
 }
-'''
+
 def create_glyph_tree(word):
-    random.seed(word)
-
     comps = []
     for i in range(len(word)):
-        if word[i] not in GLYPHS:
+        if word[i] not in CHARACTERS:
             continue
-        comps.append(Composition(leaf_glyph=GLYPHS[word[i]]))
+        comps.append(Composition(leaf_char=CHARACTERS[word[i]]))
 
     l = len(comps)
     while l > 1:
-        #idx = random.randint(0, l - 2)
         idx = l - 2
         comp1 = comps[idx]
         comp2 = comps.pop(idx + 1)
@@ -386,4 +386,4 @@ def draw_sentence(sentence, filename, size=400, stroke=5):
 
     
 
-draw_sentence('vvggggg', 'out.svg', 200, 5)
+draw_sentence('vggg', 'out.svg', 200, 5)
