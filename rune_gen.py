@@ -255,14 +255,24 @@ class Composition:
                 outer = comp.sub_comp1
                 inner = comp.sub_comp2
                 if outer.is_leaf():
-                    m_top, m_right, m_bottom, m_left = outer.leaf_glyph.padding
+                    padding = outer.leaf_glyph.padding
+                    margin = outer.leaf_glyph.margin
                 else:
-                    m_top = m_right = m_bottom = m_left = 0.05  # default margin if not leaf
+                    padding = [0.05,0.05,0.05,0.05]  # default if not leaf
+                    margin = [0.05,0.05,0.05,0.05]  # default if not leaf
+                
                 # Convert margins to pixel space
-                inner_x = x + w * m_left
-                inner_y = y + h * m_top
-                inner_w = w * (1 - m_left - m_right)
-                inner_h = h * (1 - m_top - m_bottom)
+                outer_w = w * (1 - margin[1] - margin[3])
+                inner_x = x + (w * margin[3]) + (outer_w * padding[3])
+
+                outer_h = h * (1 - margin[0] - margin[2])
+                inner_y = y + (h * margin[0]) + (outer_h * padding[0])
+
+                inner_w = (w * (1 - margin[1] - margin[3])) * (1 - padding[1] - padding[3])
+                inner_h = (h * (1 - margin[0] - margin[2])) * (1 - padding[0] - padding[2])
+
+                print(inner_h)
+
                 draw_node(outer, x, y, w, h, True)
                 draw_node(inner, inner_x, inner_y, inner_w, inner_h)
             else:
@@ -295,7 +305,7 @@ GLYPHS = {
     'v': Glyph('v', 
         'M 6 13 L 6 -47 M 2 -53 C 6 -51 8 -49 9 -47 M 10 -51 L 59 -51 L 59 10 C 59 13 57 14 54 14 L 51 14',
         is_hollow=True,
-        padding=[0.1, 0.1, 0.05, 0.15]),
+        padding=[0.1, 0.05, 0.05, 0.1]),
     'z': Glyph('z', 
         'M 13 0 C 14 -3 16 -1 16 -28 L 40 -28 L 40 -23 L 16 -23 M 29 -28 C 29 -29 29 -29 28 -30',
         is_hollow=True,
@@ -376,4 +386,4 @@ def draw_sentence(sentence, filename, size=400, stroke=5):
 
     
 
-draw_sentence('tvgggg', 'out.svg', 200, 5)
+draw_sentence('vvggggg', 'out.svg', 200, 5)
