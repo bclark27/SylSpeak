@@ -1,73 +1,45 @@
-
-https://yqnn.github.io/svg-path-editor/
-
-
-
-
-
-
-
-
-
-GLYPHS = {
-    's': Glyph('s', 
+CHARACTERS = {
+    's': Character(Glyph(
         'M 0 11 L 0 0 L 11 0 L 11 11 M 11 10 L 0 10',
         is_hollow=True,
-        padding=[0.05, 0.05, 0.15, 0.05]),
-    'w': Glyph('w', 
+        padding=[0.05, 0.05, 0.15, 0.05])),
+    'w': Character(Glyph( 
         'M 20 -34 C 23 -34 22 -47 22 -54 L 40 -54 L 40 -34',
-        simplified_path_strs=['M 20 -34 C 23 -34 22 -47 22 -54 L 30 -54 L 30 -34 M 23 -51 C 24 -50 27 -47 29 -46 M 29 -44 C 28 -42 25 -40 23 -39'],
         is_hollow=True,
-        padding=[0.1, 0.1, 0.05, 0.2]),
-    'g': Glyph('g', 
-        'M 8 25 C 9 21 9 10.3333 9 3 M 4 7 C 5.6667 6.3333 7.3333 4.6667 9 3 C 10 1.6667 11 0.3333 11 -1',
-        simplified_path_strs=['M 28 -47 C 38 -48 42 -50 48 -54 C 55 -50 60 -48 67 -46'],
-        is_hollow=False),
-    'h': Glyph('h', 
+        padding=[0.1, 0.1, 0.05, 0.2])),
+    'g': Character(
+            Glyph(
+                'M 24 -67 C 37 -77 43 -86 48 -98 C 53 -86 59 -78 71 -67',
+                is_hollow=False),
+            simplified_glyphs=[
+                Glyph(
+                'M 8 25 C 9 21 9 10.3333 9 3 M 4 7 C 5.6667 6.3333 7.3333 4.6667 9 3 C 10 1.6667 11 0.3333 11 -1',
+                is_hollow=False),
+            ]
+        ),
+    'h': Character(Glyph(
         'M 4 0 L 4 4 M 0 4 L 0 2 M 0 0 L 4 0',
-        is_hollow=True),
-    'd': Glyph('d', 
+        is_hollow=True)),
+    'd': Character(Glyph(
         'M 20 15 C 17 22 13 26 6 33 M 28 31 C 22 31 16 31 7 32 M 29 33 C 28 31 26 28 25 25 M 14 19 C 12 22 11 24 8 27',
-        is_hollow=False),
-    'f': Glyph('f', 
+        is_hollow=False)),
+    'f': Character(Glyph(
         'M 31 -30 C 36.3333 -30 41.6667 -30 47 -30 M 47 -30 L 31 -46 M 39 -38 L 43 -42',
-        simplified_path_strs=['M 32 -33 C 47 -36 60 -40 73 -45 M 70 -33 C 57 -35 44 -40 32 -46',
-                            'M 35 -39 L 41 -39 M 39 -39 L 39 -48 M 37 -39 L 37 -59'],
-        is_hollow=False),
-    'v': Glyph('v', 
+        is_hollow=False)),
+    'v': Character(Glyph(
         'M 6 13 L 6 -47 M 2 -53 C 6 -51 8 -49 9 -47 M 10 -51 L 59 -51 L 59 10 C 59 13 57 14 54 14 L 51 14',
-        simplified_path_strs=['M 39 -37 L 39 -75 M 41 -37 C 45 -37 44 -40 44 -75 M 42 -71 C 42 -76 41 -77 39 -78',
-                            'M 37 -62 L 37 -69 L 86 -69 C 86 -64 86 -62 79 -62'],
         is_hollow=True,
-        padding=[0.1, 0.1, 0.05, 0.15]),
-    'z': Glyph('z', 
+        padding=[0.1, 0.05, 0.05, 0.1])),
+    'z': Character(Glyph(
         'M 13 0 C 14 -3 16 -1 16 -28 L 40 -28 L 40 -23 L 16 -23 M 29 -28 C 29 -29 29 -29 28 -30',
         is_hollow=True,
-        padding=[0.27, 0.02, 0.02, 0.15])
-}
-
-'''
-'''
-
-GLYPHS = {
-    'r': Glyph('r', 
-        'M 45 -69 L 47 -67 L 45 -65 M 47 -69 L 49 -67 L 47 -65 M 49 -69 L 51 -67 L 49 -65',
-        simplified_path_strs=['M 47 -76 C 48 -75 49 -74 50 -72 M 47 -69 C 47 -69 49 -68 50 -67 M 47 -57 C 48 -60 49 -61 50 -62',
-                            'M 41 -76 L 41 -62 M 45 -76 L 45 -62 M 49 -76 C 49 -70 49 -64 52 -62'],
-        is_hollow=False,
-        padding=[0.13, 0.15, 0.05, 0.12]),
-    's': Glyph('s', 
-        'M 0 11 L 0 0 L 11 0 L 11 11 M 11 10 L 0 10',
-        is_hollow=True,
-        padding=[0.05, 0.05, 0.15, 0.05]),
-    'g': Glyph('g', 
-        'M 8 25 C 9 21 9 10.3333 9 3 M 4 7 C 5.6667 6.3333 7.3333 4.6667 9 3 C 10 1.6667 11 0.3333 11 -1',
-        simplified_path_strs=['M 28 -47 C 38 -48 42 -50 48 -54 C 55 -50 60 -48 67 -46'],
-        is_hollow=False),
-    'v': Glyph('v', 
-        'M 6 13 L 6 -47 M 2 -53 C 6 -51 8 -49 9 -47 M 10 -51 L 59 -51 L 59 10 C 59 13 57 14 54 14 L 51 14',
-        simplified_path_strs=['M 39 -37 L 39 -75 M 41 -37 C 45 -37 44 -40 44 -75 M 42 -71 C 42 -76 41 -77 39 -78',
-                            'M 37 -62 L 37 -69 L 86 -69 C 86 -64 86 -62 79 -62'],
-        is_hollow=True,
-        padding=[0.1, 0.1, 0.05, 0.15]),
+        padding=[0.27, 0.02, 0.02, 0.15])),
+    't': Character(
+        
+            Glyph('M 49 35 L 63 35 C 59 44 56 51 49 56 M 66 23 C 66 58 67 62 63 62 M 66 35 C 70 44 74 48 81 56 M 72 45 L 81 35'),
+            simplified_glyphs=[
+                Glyph('M 67 -95 C 69 -92 70 -90 70 -86 M 67 -86 C 68 -85 69 -83 70 -80 M 67 -69 C 68 -73 69 -75 70 -76'),
+                Glyph('M 55 -91 L 55 -103 L 79 -103 L 79 -91 Z M 59 -97 L 75 -97'),
+            ]
+        )
 }

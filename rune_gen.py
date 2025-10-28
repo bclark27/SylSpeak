@@ -16,7 +16,7 @@ class Glyph:
     def __init__(self, 
                 path_str, 
                 is_hollow=False,
-                padding=[0.15, 0.15, 0.15, 0.15], # top right bot left (interior space)
+                padding=[0.1, 0.1, 0.1, 0.1], # top right bot left (interior space)
                 margin=[0.05, 0.05, 0.05, 0.05], # top right bot left (outside)
                 translate=[0, 0], # x y (translate based on fraction of the width of the final area)
                 ):
@@ -37,6 +37,8 @@ class Glyph:
 
         self.width += right + left
         self.height += top + bot
+
+        print(self.width, self.height)
 
     def normalize_path(path):
 
@@ -294,58 +296,90 @@ class Composition:
         draw_node(self, pos_x, pos_y, size, size)
 
 CHARACTERS = {
-    's': Character(Glyph(
-        'M 0 11 L 0 0 L 11 0 L 11 11 M 11 10 L 0 10',
-        is_hollow=True,
-        padding=[0.05, 0.05, 0.15, 0.05])),
+    's': Character(
+            Glyph(
+            'M 38 -149 L 38 -113 M 33 -145 L 48 -145 M 38 -134 C 51 -155 79 -130 48 -113 C 45 -111 48 -106 53 -108',
+            margin=[0.05,0.15,0.05,0.15])
+        ),
+    'c': Character(
+            Glyph(
+            'M 34 -124 L 34 -137 C 49 -137 49 -159 34 -159 C 28 -159 24 -155 24 -148 M 39 -131 L 28 -131',
+            margin=[0.05,0.2,0.05,0.2])
+        ),
     'w': Character(Glyph( 
         'M 20 -34 C 23 -34 22 -47 22 -54 L 40 -54 L 40 -34',
         is_hollow=True,
         padding=[0.1, 0.1, 0.05, 0.2])),
     'g': Character(
             Glyph(
-                'M 24 -67 C 37 -77 43 -86 48 -98 C 53 -86 59 -78 71 -67',
-                is_hollow=False),
+                'M 9 14 L 9 3 M 5 5 C 8 4 8 4 9 3 C 10 2 11 1 11 -1'
+            ),
             simplified_glyphs=[
                 Glyph(
-                'M 8 25 C 9 21 9 10.3333 9 3 M 4 7 C 5.6667 6.3333 7.3333 4.6667 9 3 C 10 1.6667 11 0.3333 11 -1',
-                is_hollow=False),
+                    'M 24 -67 C 37 -77 43 -86 48 -98 C 53 -86 59 -78 71 -67',
+                ),
             ]
         ),
-    'h': Character(Glyph(
-        'M 4 0 L 4 4 M 0 4 L 0 2 M 0 0 L 4 0',
-        is_hollow=True)),
+    'h': Character(
+            Glyph(
+                'M 20 -143 L 20 -124 M 20 -152 L 39 -152 C 41 -152 43 -150 43 -148 L 43 -124',
+                is_hollow=True,
+                padding=[0.1,0.1,0,0.1]
+            )
+        ),
     'd': Character(Glyph(
         'M 20 15 C 17 22 13 26 6 33 M 28 31 C 22 31 16 31 7 32 M 29 33 C 28 31 26 28 25 25 M 14 19 C 12 22 11 24 8 27',
         is_hollow=False)),
     'f': Character(Glyph(
         'M 31 -30 C 36.3333 -30 41.6667 -30 47 -30 M 47 -30 L 31 -46 M 39 -38 L 43 -42',
         is_hollow=False)),
-    'v': Character(Glyph(
+    'sh': Character(Glyph(
         'M 6 13 L 6 -47 M 2 -53 C 6 -51 8 -49 9 -47 M 10 -51 L 59 -51 L 59 10 C 59 13 57 14 54 14 L 51 14',
         is_hollow=True,
         padding=[0.1, 0.05, 0.05, 0.1])),
-    'z': Character(Glyph(
-        'M 13 0 C 14 -3 16 -1 16 -28 L 40 -28 L 40 -23 L 16 -23 M 29 -28 C 29 -29 29 -29 28 -30',
-        is_hollow=True,
-        padding=[0.27, 0.02, 0.02, 0.15])),
-    't': Character(Glyph(
-        'M 62 -102 C 65 -100 69 -94 70 -91 M 62 -86 C 66 -85 68 -83 70 -80 M 64 -54 C 65 -58 67 -62 70 -66',
-        is_hollow=False,
-        margin=[0.2,0,0.2,0],
-        translate=[0, 0]))
+    'z': Character(
+            Glyph(
+                'M 40 -149 L 40 -103 C 33 -103 33 -93 40 -93 C 47 -93 47 -103 40 -103 M 27 -127 L 54 -127 M 20 -149 C 30 -127 30 -127 20 -106 M 61 -149 C 51 -127 51 -127 61 -106'
+            )
+        ),
+    'j': Character(
+            Glyph(
+                'M 69 -94 L 69 -136 M 78 -104 L 43 -104 C 86 -140 39 -142 46 -125'
+            )
+        )
 }
 
-SEQUENCES = {
-    "vggg",
-}
+def segment_word(word, sequences):
+    """
+    Splits 'word' into a list of substrings found in 'sequences',
+    using greedy longest-match from left to right.
+    Characters not in any sequence are skipped.
+    """
+    result = []
+    i = 0
+    while i < len(word):
+        best_match = None
+        # Try longest possible substring from this position
+        for j in range(len(word), i, -1):
+            segment = word[i:j]
+            if segment in sequences:
+                best_match = segment
+                break
+        if best_match:
+            result.append(best_match)
+            i += len(best_match)
+        else:
+            # Skip one char if no match
+            i += 1
+    return result
+
+#TODO: adda word finder, which searches for words and then tries to keep that character pre calculated and consistent
 
 def create_glyph_tree(word):
+    segs = segment_word(word, CHARACTERS)
     comps = []
-    for i in range(len(word)):
-        if word[i] not in CHARACTERS:
-            continue
-        comps.append(Composition(leaf_char=CHARACTERS[word[i]]))
+    for seg in segs:
+        comps.append(Composition(leaf_char=CHARACTERS[seg]))
 
     l = len(comps)
     while l > 1:
@@ -386,4 +420,4 @@ def draw_sentence(sentence, filename, size=400, stroke=5):
 
     
 
-draw_sentence('vggg', 'out.svg', 200, 5)
+draw_sentence('gshjhcsd', 'out.svg', 200, 5)
