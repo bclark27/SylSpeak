@@ -331,7 +331,7 @@ CHARACTERS = {
         'M 20 15 C 17 22 13 26 6 33 M 28 31 C 22 31 16 31 7 32 M 29 33 C 28 31 26 28 25 25 M 14 19 C 12 22 11 24 8 27',
         is_hollow=False)),
     'f': Character(Glyph(
-        'M 31 -30 C 36.3333 -30 41.6667 -30 47 -30 M 47 -30 L 31 -46 M 39 -38 L 43 -42',
+        'M 28 26 C 39 20 53 22 65 26 C 47 10 51 1 54 -3 M 65 26 L 28 -7 M 41 -4 L 31 5',
         is_hollow=False)),
     'sh': Character(
         Glyph(
@@ -358,8 +358,22 @@ CHARACTERS = {
             ),
             simplified_glyphs=[
                 Glyph(
-                    'M 12 3 L 12 46 M 12 9 C 19 2 31 1 33 12 C 35 26 29 29 31 43 C 34 52 44 39 33 38 C 28 38 30 45 23 42',
-                    margin=[0.05,0.1,0.05,0.1]
+                    'M 12 3 L 12 46 M 12 9 C 19 2 31 1 33 12 C 35 26 29 29 31 43 C 34 52 44 39 33 38 C 28 38 30 45 23 42'
+                ),
+                Glyph(
+                    'M 12 3 L 12 19 M 12 8 C 19 2 39 -1 43 4 C 47 9 42 10 43 15 C 46 25 54 11 45 12 C 41 13 43 15 38 17'
+                ),
+            ]
+        ),
+    'p': Character(
+            Glyph(
+                'M 6 -13 L 40 -13 M 6 23 L 40 23 M 9 -13 L 9 23 M 37 -13 L 37 23',
+                is_hollow=True,
+                padding=[0.05,0.1,0.05,0.1],
+            ),
+            simplified_glyphs=[
+                Glyph(
+                    'M 15 -13 L 33 -13 M 15 23 L 33 23 M 20 -13 L 20 23 M 28 -13 L 28 23'
                 ),
             ]
         ),
@@ -368,11 +382,16 @@ CHARACTERS = {
                 'M 11 11 C 13 8 16 10 16 16 L 16 38 M 15 12 C 20 8 24 10 24 16 L 24 38 M 23 12 C 28 8 32 10 32 16 C 32 38 33 36 37 38 M 32 17 C 34 15 37 15 37 18 C 37 27 35 34 29 39',
                 margin=[0.05,0.1,0.05,0.1]
             )
+        ),
+    'o': Character(
+            Glyph(
+                'M 15 -13 L 29 -13 C 14 -20 15 -42 35 -42 C 55 -42 55 -20 40 -13 L 54 -13'
+            )
         )
 }
 
 SUB_CHARACTERS = {
-    'hh'
+    ''
 }
 
 def segment_word(word, sequences):
@@ -473,4 +492,4 @@ def draw_sentence(sentence, filename, size=400, stroke=5):
     dwg.save()
 
     
-draw_sentence('ggshjhsncd shn', 'out.svg', 200, 5)
+draw_sentence('npjmshz', 'out.svg', 200, 5)
