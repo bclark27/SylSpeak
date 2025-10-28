@@ -17,23 +17,28 @@ class Glyph:
                 name, 
                 path_str, 
                 is_hollow=False,
-                inside_margins=[0.15, 0.15, 0.15, 0.15], # top right bot left
-                simplified_path_strs=[]
+                padding=[0.15, 0.15, 0.15, 0.15], # top right bot left (interior space)
+                margin=[0.05, 0.05, 0.05, 0.05], # top right bot left (outside)
+                translate=[0, 0], # x y (translate based on fraction of the width of the final area)
                 ):
         self.name = name
         self.is_hollow = is_hollow
-        self.inside_margins = inside_margins
+        self.padding = padding
+        self.margin = margin
+        self.translate = translate
 
         self.path = Glyph.normalize_path(path_str)
-
         minx, maxx, miny, maxy = self.path.bbox()
         self.width = maxx - minx
         self.height = maxy - miny
 
-        self.simplified_paths = []
-        for s in simplified_path_strs:
-            self.simplified_paths.append(Glyph.normalize_path(s))
+        top = self.margin[0] * self.height
+        right = self.margin[1] * self.width
+        bot = self.margin[2] * self.height
+        left = self.margin[3] * self.width
 
+        self.width += right + left
+        self.height += top + bot
 
     def normalize_path(path):
 
@@ -61,6 +66,7 @@ class Glyph:
         p = p.translated(-complex(minx, miny))
         return p
 
+    '''
     def closest_aspect_ratio_index(paths, ref_hw):
         """
         Returns the index in hw_list whose aspect ratio (h/w)
@@ -90,23 +96,35 @@ class Glyph:
         options = [self.path] + self.simplified_paths
         return options[Glyph.closest_aspect_ratio_index(options, ref_hw)]
 
-    def draw(self, dwg, draw_w, draw_h, x, y, stroke, can_simplify):
-        
+    '''
+    def draw(self, dwg, draw_w, draw_h, x, y, stroke):
+
         p = self.path
-        if can_simplify:
-            p = self.get_best_path((draw_h, draw_w))
-
+   
         minx, maxx, miny, maxy = p.bbox()
-        width = maxx - minx
-        height = maxy - miny
+        path_width = maxx - minx
+        path_height = maxy - miny
 
-        scale_x = draw_w / width
-        scale_y = draw_h / height
-        # Flip Y for SVG coordinates
-        p = p.scaled(scale_x, -scale_y)
+        scale_x = draw_w / path_width
+        scale_y = draw_h / path_height
+        
+        # scale to fit the draw canvas size
+        p = p.scaled(scale_x, scale_y)
+        # flip on the y axis
+        p = p.scaled(1, -1)
+        # scale it down to fit the margins
+        p = p.scaled(1 - (self.margin[1] + self.margin[3]), 1 - (self.margin[0] + self.margin[2]))
+        
         # Translate to top-left of allocated box
-        transformed_path = p.translated(complex(x, y + draw_h))
-        dwg.add(dwg.path(d=transformed_path.d(), stroke='black', fill='none', stroke_width=stroke))
+        p = p.translated(complex(x, y + draw_h))
+
+        # translate the path to go into the middle of the margin
+        p = p.translated(complex(draw_w * self.margin[3], -draw_h * self.margin[2]))
+        
+        # translate optional amount outside the bounds
+        p = p.translated(complex(draw_w * self.translate[0], draw_h * self.translate[1]))
+        
+        dwg.add(dwg.path(d=p.d(), stroke='black', fill='none', stroke_width=stroke))
 
         
 
@@ -201,12 +219,11 @@ class Composition:
             self.op = CompositionOp.HORZ
             self.sub_comp1_percent = horz_sub1_percent
 
-    def draw_svg(self, dwg, pos_x, pos_y, size=400, stroke=5, gap=0.02):
+    def draw_svg(self, dwg, pos_x, pos_y, size=400, stroke=5):
         """
         Draws this composition as an independent SVG.
         - size: final image size in pixels (square)
         - stroke: stroke width in pixels
-        - gap: fraction of square size to leave as gap between stacked glyphs
         """
         def draw_node(comp, x, y, w, h, glyph_is_filled=False):
             """
@@ -216,43 +233,37 @@ class Composition:
             - w, h: width and height to draw this node
             """
             # Add a tiny gap for stacked compositions
-            gap_w = w * gap
-            gap_h = h * gap
-            draw_w = w - gap_w
-            draw_h = h - gap_h
-            offset_x = x + gap_w / 2
-            offset_y = y + gap_h / 2
 
             if comp.is_leaf():
-                comp.leaf_glyph.draw(dwg, draw_w, draw_h, offset_x, offset_y, stroke, not glyph_is_filled)
+                comp.leaf_glyph.draw(dwg, w, h, x, y, stroke)
 
             elif comp.op == CompositionOp.VERT:
                 # Vertical stack: divide height according to sub_comp1_percent
-                h1 = draw_h * comp.sub_comp1_percent
-                h2 = draw_h - h1
-                draw_node(comp.sub_comp1, offset_x, offset_y, draw_w, h1)
-                draw_node(comp.sub_comp2, offset_x, offset_y + h1, draw_w, h2)
+                h1 = h * comp.sub_comp1_percent
+                h2 = h - h1
+                draw_node(comp.sub_comp1, x, y, w, h1)
+                draw_node(comp.sub_comp2, x, y + h1, w, h2)
             elif comp.op == CompositionOp.HORZ:
                 # Horizontal stack: divide width according to sub_comp1_percent
-                w1 = draw_w * comp.sub_comp1_percent
-                w2 = draw_w - w1
-                draw_node(comp.sub_comp1, offset_x, offset_y, w1, draw_h)
-                draw_node(comp.sub_comp2, offset_x + w1, offset_y, w2, draw_h)
+                w1 = w * comp.sub_comp1_percent
+                w2 = w - w1
+                draw_node(comp.sub_comp1, x, y, w1, h)
+                draw_node(comp.sub_comp2, x + w1, y, w2, h)
             elif comp.op == CompositionOp.IN:
                 # IN operation: sub_comp2 is nested inside sub_comp1
                 # Apply inside margins from the leaf glyph (assume sub_comp1 is hollow)
                 outer = comp.sub_comp1
                 inner = comp.sub_comp2
                 if outer.is_leaf():
-                    m_top, m_right, m_bottom, m_left = outer.leaf_glyph.inside_margins
+                    m_top, m_right, m_bottom, m_left = outer.leaf_glyph.padding
                 else:
                     m_top = m_right = m_bottom = m_left = 0.05  # default margin if not leaf
                 # Convert margins to pixel space
-                inner_x = offset_x + draw_w * m_left
-                inner_y = offset_y + draw_h * m_top
-                inner_w = draw_w * (1 - m_left - m_right)
-                inner_h = draw_h * (1 - m_top - m_bottom)
-                draw_node(outer, offset_x, offset_y, draw_w, draw_h, True)
+                inner_x = x + w * m_left
+                inner_y = y + h * m_top
+                inner_w = w * (1 - m_left - m_right)
+                inner_h = h * (1 - m_top - m_bottom)
+                draw_node(outer, x, y, w, h, True)
                 draw_node(inner, inner_x, inner_y, inner_w, inner_h)
             else:
                 raise ValueError(f"Unknown composition operation: {comp.op}")
@@ -264,15 +275,13 @@ GLYPHS = {
     's': Glyph('s', 
         'M 0 11 L 0 0 L 11 0 L 11 11 M 11 10 L 0 10',
         is_hollow=True,
-        inside_margins=[0.05, 0.05, 0.15, 0.05]),
+        padding=[0.05, 0.05, 0.15, 0.05]),
     'w': Glyph('w', 
         'M 20 -34 C 23 -34 22 -47 22 -54 L 40 -54 L 40 -34',
-        simplified_path_strs=['M 20 -34 C 23 -34 22 -47 22 -54 L 30 -54 L 30 -34 M 23 -51 C 24 -50 27 -47 29 -46 M 29 -44 C 28 -42 25 -40 23 -39'],
         is_hollow=True,
-        inside_margins=[0.1, 0.1, 0.05, 0.2]),
+        padding=[0.1, 0.1, 0.05, 0.2]),
     'g': Glyph('g', 
         'M 8 25 C 9 21 9 10.3333 9 3 M 4 7 C 5.6667 6.3333 7.3333 4.6667 9 3 C 10 1.6667 11 0.3333 11 -1',
-        simplified_path_strs=['M 28 -47 C 38 -48 42 -50 48 -54 C 55 -50 60 -48 67 -46'],
         is_hollow=False),
     'h': Glyph('h', 
         'M 4 0 L 4 4 M 0 4 L 0 2 M 0 0 L 4 0',
@@ -282,52 +291,40 @@ GLYPHS = {
         is_hollow=False),
     'f': Glyph('f', 
         'M 31 -30 C 36.3333 -30 41.6667 -30 47 -30 M 47 -30 L 31 -46 M 39 -38 L 43 -42',
-        simplified_path_strs=['M 32 -33 C 47 -36 60 -40 73 -45 M 70 -33 C 57 -35 44 -40 32 -46',
-                            'M 35 -39 L 41 -39 M 39 -39 L 39 -48 M 37 -39 L 37 -59'],
         is_hollow=False),
     'v': Glyph('v', 
         'M 6 13 L 6 -47 M 2 -53 C 6 -51 8 -49 9 -47 M 10 -51 L 59 -51 L 59 10 C 59 13 57 14 54 14 L 51 14',
-        simplified_path_strs=['M 39 -37 L 39 -75 M 41 -37 C 45 -37 44 -40 44 -75 M 42 -71 C 42 -76 41 -77 39 -78',
-                            'M 37 -62 L 37 -69 L 86 -69 C 86 -64 86 -62 79 -62'],
         is_hollow=True,
-        inside_margins=[0.1, 0.1, 0.05, 0.15]),
+        padding=[0.1, 0.1, 0.05, 0.15]),
     'z': Glyph('z', 
         'M 13 0 C 14 -3 16 -1 16 -28 L 40 -28 L 40 -23 L 16 -23 M 29 -28 C 29 -29 29 -29 28 -30',
         is_hollow=True,
-        inside_margins=[0.27, 0.02, 0.02, 0.15])
+        padding=[0.27, 0.02, 0.02, 0.15]),
+    't': Glyph('t', 
+        'M 62 -102 C 65 -100 69 -94 70 -91 M 62 -86 C 66 -85 68 -83 70 -80 M 64 -54 C 65 -58 67 -62 70 -66',
+        is_hollow=False,
+        margin=[0.2,0,0.2,0],
+        translate=[0, 0])
 }
 
 '''
 
 GLYPHS = {
-    'w': Glyph('w', 
-        'M 28 -98 C 30 -98 31 -73 28 -63 M 29 -95 L 52 -95 C 56 -95 57 -94 57 -91 L 57 -63',
+    'r': Glyph('r', 
+        'M 45 -69 L 47 -67 L 45 -65 M 47 -69 L 49 -67 L 47 -65 M 49 -69 L 51 -67 L 49 -65',
+        is_hollow=False,
+        padding=[0.13, 0.15, 0.05, 0.12]),
+    's': Glyph('s', 
+        'M 0 11 L 0 0 L 11 0 L 11 11 M 11 10 L 0 10',
         is_hollow=True,
-        inside_margins=[0.13, 0.15, 0.05, 0.12]),
-    'z': Glyph('z', 
-        'M 31 -82 L 45 -73 M 37 -78 C 33 -71 35 -60 38 -45',
+        padding=[0.05, 0.05, 0.15, 0.05]),
+    'g': Glyph('g', 
+        'M 8 25 C 9 21 9 10.3333 9 3 M 4 7 C 5.6667 6.3333 7.3333 4.6667 9 3 C 10 1.6667 11 0.3333 11 -1',
         is_hollow=False),
     'v': Glyph('v', 
-        'M 33 -94 C 41 -88 45 -83 45 -79 L 45 -35',
-        is_hollow=False),
-    'h': Glyph('h', 
-        'M 33 -52 L 33 -84 M 33 -99 L 64 -99 C 68 -99 71 -96 71 -93 L 71 -52',
+        'M 6 13 L 6 -47 M 2 -53 C 6 -51 8 -49 9 -47 M 10 -51 L 59 -51 L 59 10 C 59 13 57 14 54 14 L 51 14',
         is_hollow=True,
-        inside_margins=[0.13, 0.13, 0.02, 0.13]),
-    'd': Glyph('d', 
-        'M 16 -95 L 65 -95 C 65 -54 65 -50 67 -41',
-        is_hollow=True,
-        inside_margins=[0.1, 0.13, 0.02, 0.02]),
-    'g': Glyph('g', 
-        'M 48 -101 C 73 -89 69 -90 84 -26 M 47 -27 C 65 -29 73 -37 78 -51',
-        is_hollow=False),
-    'b': Glyph('b', 
-        'M 24 -103 L 61 -103 C 67 -103 69 -100 69 -97 L 69 -61 L 24 -61 M 69 -61 L 72 -61',
-        is_hollow=True,
-        inside_margins=[0.1, 0.13, 0.1, 0.02]),
-    'c': Glyph('c', 
-        'M 23 -129 L 72 -83 M 40 -113 C 33 -104 25 -97 24 -83 M 55 -99 C 63 -109 73 -118 71 -130',
-        is_hollow=False),
+        padding=[0.1, 0.1, 0.05, 0.15]),
 }
 '''
 def create_glyph_tree(word):
@@ -355,7 +352,7 @@ def create_glyph_tree(word):
 
     return comps[0]
 
-def draw_sentence(sentence, filename, size=400, stroke=5, gap=0.02):
+def draw_sentence(sentence, filename, size=400, stroke=5):
     words = sentence.split(' ')
     
     word_trees = []
@@ -372,11 +369,11 @@ def draw_sentence(sentence, filename, size=400, stroke=5, gap=0.02):
     x = 0
     for i in range(len(word_trees)):
         t = word_trees[i]
-        t.draw_svg(dwg, x, 0, size, stroke, gap)
+        t.draw_svg(dwg, x, 0, size, stroke)
         x += size + char_gap
 
     dwg.save()
 
     
 
-draw_sentence('ws ghd vzd df vfgwvzd', 'out.svg', 200, 5, 0.05)
+draw_sentence('tvgggg', 'out.svg', 200, 5)
