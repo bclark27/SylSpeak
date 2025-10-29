@@ -4,7 +4,7 @@ air,氣,1000,air
 alc,酒,1000,guy
 all,全,1000,guy
 amt,幾,1000,guy
-and,而,1000,and
+and,而,1000,and_r
 ans,答,1000,guy
 arm,臂,1000,guy
 ash,灰,1000,guy
@@ -483,7 +483,7 @@ stitch,紩,1000,guy
 stone,石,1000,guy
 stop,止,1000,guy
 store,店,1000,guy
-stream,河,1000,guy
+stream,河,1000,stream_r
 streight,直,1000,guy
 string,串,1000,guy
 strong,強,1000,guy
@@ -530,7 +530,7 @@ touch,著,1000,guy
 town,城,1000,guy
 trade,販,1000,guy
 trans,改,1000,guy
-tree,木,1000,guy
+tree,木,1000,tree_r
 true,實,1000,guy
 trust,信,1000,guy
 try,試,1000,guy
@@ -578,7 +578,7 @@ wise,智,1000,guy
 wish,願,1000,guy
 with,和,1000,guy
 wood,樿,1000,guy
-woods,林,1000,guy
+woods,林,1000,tree_r tree_r tree_r
 word,言,1000,guy
 work,工,1000,guy
 world,世,1000,guy

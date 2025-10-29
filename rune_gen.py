@@ -441,6 +441,32 @@ RADICALS_DEFS = {
                 Glyph(
                     'M 9 -26 L 11 -16 L 9 -5 M 10 -16 L 8 -22 M 10 -13 L 8 -16',
                 ),
+                Glyph(
+                    'M 5 -19 L 2 -21 M 10 -19 L 8 -22 M 14 -19 L 18 -21',
+                ),
+            ]
+        ),
+    'tree_r': Character(
+            Glyph(
+                'M 0 -30 L 0 -2 M -13 -25 L 13 -25 M 0 -25 C -3 -15 -4 -13 -12 -6 M 0 -25 C 3 -15 4 -13 12 -6',
+            ),
+            simplified_glyphs=[
+                Glyph(
+                    'M 0 -30 L 0 -2 M -5 -25 L 5 -25 M -3 -24 L -3 -4 M 3 -24 L 3 -4',
+                ),
+            ]
+        ),
+    'stream_r': Character(
+            Glyph(
+                'M 12 -19 C 12 -5 12 -5 8 0 M 18 -18 L 18 -2 M 24 -19 L 24 0',
+            ),
+            simplified_glyphs=[
+                Glyph(
+                    'M 11 -19 L 9 -11 L 11 -3 M 13 -19 L 11 -11 L 13 -3',
+                ),
+                Glyph(
+                    'M 11 -18 L 8 -16 L 11 -14 M 14 -18 L 11 -16 L 14 -14 M 17 -18 L 14 -16 L 17 -14',
+                ),
             ]
         )
 }
@@ -582,4 +608,4 @@ def new_draw_words(sentence, filename, size=200, stroke=5):
     dwg.save()
 
 WORD_COMPONENTS = load_vocab()
-new_draw_words('wind', 'out.svg')
+new_draw_words('stream', 'out.svg')
