@@ -20,7 +20,6 @@ def main():
   missing_rads = {}
   with open(vocab_path, 'r') as file:
     lines = file.readlines()
-    splitLines = []
     for line in lines:
       line = line.split('#', 1)[0].strip(" \n\t")
       

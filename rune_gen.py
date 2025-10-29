@@ -293,8 +293,8 @@ class Composition:
         # Start recursive drawing
         draw_node(self, pos_x, pos_y, size, size)
 
-CHARACTERS = {
-    'g': Character(
+RADICALS_DEFS = {
+    'guy': Character(
             Glyph(
                 'M 9 14 L 9 3 M 5 5 C 8 4 8 4 9 3 C 10 2 11 1 11 -1'
             ),
@@ -304,102 +304,105 @@ CHARACTERS = {
                 ),
             ]
         ),
+    'moon': Character(
+            Glyph(
+                'M 11 11 C 13 8 16 10 16 16 L 16 38 M 15 12 C 20 8 24 10 24 16 L 24 38 M 23 12 C 28 8 32 10 32 16 C 32 38 33 36 37 38 M 32 17 C 34 15 37 15 37 18 C 37 27 35 34 29 39',
+                margin=[0.05,0.1,0.05,0.1]
+            )
+        ),
+    'out': Character(
+            Glyph(
+                'M 69 -94 L 69 -136 M 78 -104 L 43 -104 C 86 -140 39 -142 46 -125'
+            )
+        ),
 }
 
-SUB_CHARACTERS = {
-    'gsh',
+WORD_COMPONENTS = None
 
-}
+def get_radicals(path):
+    with open(path, 'r') as file:
+        lines = file.readlines()
+        lines = [x.lower().strip() for x in lines]
+        return lines
 
-def segment_word(word, sequences):
-    """
-    Splits 'word' into a list of substrings found in 'sequences',
-    using greedy longest-match from left to right.
-    Consecutive unmatched characters are grouped together.
-    """
-    result = []
-    i = 0
-    unmatched = ""
+def get_word_compositions(path):
+    with open(path, 'r') as file:
+        lines = file.readlines()
+        pairs = {}
+        for line in lines:
+            line = line.split('#', 1)[0].strip(" \n\t")
+            if line.startswith("#") or ',' not in line:
+                continue
 
-    while i < len(word):
-        best_match = None
-        # Try longest possible substring from this position
-        for j in range(len(word), i, -1):
-            segment = word[i:j]
-            if segment in sequences:
-                best_match = segment
-                break
+            data = line.split(',')
+            if len(data) < 4 or len(data[0].split(' ')) != 1:
+                continue
 
-        if best_match:
-            # If we had accumulated unmatched chars, flush them first
-            if unmatched:
-                result.append(unmatched)
-                unmatched = ""
-            result.append(best_match)
-            i += len(best_match)
+            word = data[0]
+            rads = data[3].split(' ')
+            pairs[word] = rads
+        return pairs
+
+def load_vocab():
+
+    rad_path = "radicals.csv"
+    vocab_path = "vocab.csv"
+
+    radicals = get_radicals(rad_path)
+
+    # first check if we have definitions for all the radicals
+    missing_radicals = []
+    for r in radicals:
+        if r not in RADICALS_DEFS and r not in missing_radicals:
+            missing_radicals.append(r)
+
+    if len(missing_radicals) > 0:
+        print(f"Missing radical svg definitions: {missing_radicals}")
+
+    # laod in the word->radicals set
+    return get_word_compositions(vocab_path)
+
+def construct_word_tree(word):
+    # first get the components
+    
+
+    components = WORD_COMPONENTS[word]
+
+
+    trees = []
+    # for each component check first if it is a radical
+    for component in components:
+        if component in RADICALS_DEFS:
+            trees.append(Composition(leaf_char=RADICALS_DEFS[component]))
+        elif component in WORD_COMPONENTS:
+            trees.append(construct_word_tree(component))
         else:
-            unmatched += word[i]
-            i += 1
+            print(f"WARNING: '{component}' not a radical or word")
 
-    # Flush any remaining unmatched chars
-    if unmatched:
-        result.append(unmatched)
-
-    return result
-
-def create_tree(word):
-    segs = segment_word(word, CHARACTERS)
-    comps = []
-    for seg in segs:
-        comps.append(Composition(leaf_char=CHARACTERS[seg]))
-
-    l = len(comps)
+    l = len(trees)
     while l > 1:
         idx = l - 2
-        comp1 = comps[idx]
-        comp2 = comps.pop(idx + 1)
+        comp1 = trees[idx]
+        comp2 = trees.pop(idx + 1)
         newComp = Composition(
             sub_comp1=comp1,
             sub_comp2=comp2
         )
 
-        comps[idx] = newComp
-        l = len(comps)
+        trees[idx] = newComp
+        l = len(trees)
 
-    return comps[0]
+    trees[0].calc_constructions(True)
 
-def get_sub_character_tree(word):
-    segs = segment_word(word, SUB_CHARACTERS)
-    sub_char_trees = []
-    for seg in segs:
-        t = create_tree(seg)
-        t.calc_constructions()
-        sub_char_trees.append(t)
+    return trees[0]
 
-    l = len(sub_char_trees)
-    while l > 1:
-        idx = l - 2
-        comp1 = sub_char_trees[idx]
-        comp2 = sub_char_trees.pop(idx + 1)
-        newComp = Composition(
-            sub_comp1=comp1,
-            sub_comp2=comp2
-        )
 
-        sub_char_trees[idx] = newComp
-        l = len(sub_char_trees)
-
-    sub_char_trees[0].calc_constructions(True)
-
-    return sub_char_trees[0]
-    
-
-def draw_sentence(sentence, filename, size=400, stroke=5):
+def new_draw_words(sentence, filename, size=400, stroke=5):
     words = sentence.split(' ')
-    
+
     word_trees = []
     for w in words:
-        t = get_sub_character_tree(w)
+        t = construct_word_tree(w)
         word_trees.append(t)
 
     char_gap = size / 8
@@ -415,5 +418,5 @@ def draw_sentence(sentence, filename, size=400, stroke=5):
 
     dwg.save()
 
-    
-draw_sentence('g', 'out.svg', 200, 5)
+WORD_COMPONENTS = load_vocab()
+new_draw_words('guest', 'out.svg')
