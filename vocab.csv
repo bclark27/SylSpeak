@@ -175,7 +175,7 @@ flood,洪,1000,guy
 flour,麵,1000,guy
 flow,流,1000,guy
 fly,飛,1000,guy
-fmale,女,1000,guy
+fmale,女,1000,fmale
 fond,喜,1000,guy
 food,食,1000,guy
 foot,足,1000,guy
@@ -232,7 +232,7 @@ hire,任,1000,guy
 hit,打,1000,guy
 hold,把,1000,guy
 hole,洞,1000,guy
-home,屋,1000,guy
+home,屋,1000,home
 hope,希,1000,guy
 horse,馬,1000,guy
 hot,熱,1000,guy
@@ -281,9 +281,9 @@ loathe,厭,1000,guy
 long,長,1000,guy
 lot,多,1000,guy
 loud,咋,1000,guy
-love,爱,1000,guy
+love,爱,1000,guy fmale
 make,造,1000,guy
-male,男,1000,guy
+male,男,1000,male
 max,限,1000,guy
 mean,陋,1000,guy
 meas,度,1000,guy
@@ -521,7 +521,7 @@ tie,綁,1000,guy
 tight,嚴,1000,guy
 tile,磚,1000,guy
 till,迄,1000,guy
-time,時,1000,guy
+time,時,1000,time
 to,往,1000,guy
 too,都,1000,guy
 tool,具,1000,guy

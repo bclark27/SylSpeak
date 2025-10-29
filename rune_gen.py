@@ -11,13 +11,16 @@ class CompositionOp(Enum):
     IN=3
     NONE=4
 
+MARG_DEF = 0.03
+PADD_DEF = 0.07
+
 # --- Glyph definition ---
 class Glyph:
     def __init__(self, 
                 path_str, 
                 is_hollow=False,
-                padding=[0.1, 0.1, 0.1, 0.1], # top right bot left (interior space)
-                margin=[0.05, 0.05, 0.05, 0.05], # top right bot left (outside)
+                padding=[PADD_DEF]*4, # top right bot left (interior space)
+                margin=[MARG_DEF]*4, # top right bot left (outside)
                 translate=[0, 0], # x y (translate based on fraction of the width of the final area)
                 ):
         self.is_hollow = is_hollow
@@ -101,7 +104,9 @@ class Character:
 
     def draw(self, dwg, draw_w, draw_h, x, y, stroke, can_simplify):
         if can_simplify:
-            best_fit = self.get_best_glyph((draw_h, draw_w))
+            best_fit = self.get_best_filled_glyph((draw_h, draw_w))
+            if best_fit is None:
+                best_fit = self.get_best_glyph((draw_h, draw_w))
             best_fit.draw(dwg, draw_w, draw_h, x, y, stroke)
         else:
             self.main_glyph.draw(dwg, draw_w, draw_h, x, y, stroke)
@@ -133,6 +138,14 @@ class Character:
     def get_best_glyph(self, ref_hw):
         options = [self.main_glyph] + self.simplified_glyphs
         return options[Character.closest_aspect_ratio_index(options, ref_hw)]
+
+    def get_best_filled_glyph(self, ref_hw):
+        options = list(filter(lambda x: not x.is_hollow, [self.main_glyph] + self.simplified_glyphs))
+        best_idx = Character.closest_aspect_ratio_index(options, ref_hw)
+        if best_idx is None:
+            return None
+        return options[best_idx]
+
 
 
 class Composition:
@@ -300,24 +313,64 @@ RADICALS_DEFS = {
             ),
             simplified_glyphs=[
                 Glyph(
-                    'M 24 -67 C 37 -77 43 -86 48 -98 C 53 -86 59 -78 71 -67',
+                    'M 24 -67 C 37 -77 43 -86 48 -98 C 53 -86 59 -78 71 -67'
                 ),
             ]
         ),
     'moon': Character(
             Glyph(
-                'M 11 11 C 13 8 16 10 16 16 L 16 38 M 15 12 C 20 8 24 10 24 16 L 24 38 M 23 12 C 28 8 32 10 32 16 C 32 38 33 36 37 38 M 32 17 C 34 15 37 15 37 18 C 37 27 35 34 29 39',
-                margin=[0.05,0.1,0.05,0.1]
-            )
+                'M 28 3 C 28 0 26 -2 23 -2 L 0 -2 L 0 20 C 0 23 2 25 4 25 L 6 25',
+                is_hollow=True
+            ),
+            simplified_glyphs=[
+                Glyph(
+                    'M 32 -3 C -10 -17 -10 50 32 39 C 4 39 4 -3 32 -3'
+                ),
+            ]
         ),
     'out': Character(
             Glyph(
                 'M 69 -94 L 69 -136 M 78 -104 L 43 -104 C 86 -140 39 -142 46 -125'
             )
         ),
+    'male': Character(
+            Glyph(
+                'M 0 0 C 20 0 20 30 0 30 C -20 30 -20 0 0 0 M 12 6 L 27 -9 C 25 -8 22 -8 16 -9 M 27 -9 C 26 -7 26 -4 27 2'
+            )
+        ),
+    'fmale': Character(
+            Glyph(
+                'M 0 0 C 20 0 20 30 0 30 C -20 30 -20 0 0 0 M 0 30 L 0 45 M -8 39 L 8 39',
+                margin=[0.05,0.15,0.05,0.15]
+            )
+        ),
+    'home': Character(
+            Glyph(
+                'M 22 36 C 26 24 25 11 25 -2 L 67 -2',
+                padding=[0.05,0.0,0.0,0.1],
+                is_hollow=True
+            ),
+        ),
+    'time': Character(
+            Glyph(
+                'M 11 4 L 11 33 M 11 9 C 17 5 34 2 34 9 C 34 12 33.3333 23 33 31 C 33 34 36 34 36 31 M 9 6 L 14 6',
+                is_hollow=True,
+                padding=[0.13,0.13,0.0,0.1]
+            ),
+            simplified_glyphs=[
+                Glyph(
+                    'M 12 3 L 12 44 M 12 9 C 19 2 35 1 37 12 C 40 25 29 29 30 40 C 32 52 44 37 35 35 C 27 34 29 43 17 38 M 8 6 L 17 4',
+                    margin=[0.05,0.2,0.05,0.15]
+                ),
+            ]
+        ),
 }
 
 WORD_COMPONENTS = None
+
+SIMPLIFICATIONS = {
+    ("radical1", "radical2", "radical3"): "combination",
+}
 
 def get_radicals(path):
     with open(path, 'r') as file:
@@ -362,12 +415,44 @@ def load_vocab():
     # laod in the word->radicals set
     return get_word_compositions(vocab_path)
 
-def construct_word_tree(word):
-    # first get the components
-    
+def simplify_components(components):
+    changed = True
+    while changed:
+        changed = False
+        i = 0
+        new_components = []
 
+        while i < len(components):
+            best_match = None
+            best_key = None
+
+            # try all keys, find the longest one that matches here
+            for key in SIMPLIFICATIONS.keys():
+                klen = len(key)
+                if i + klen <= len(components) and tuple(components[i:i + klen]) == key:
+                    if not best_match or klen > len(best_key):
+                        best_match = SIMPLIFICATIONS[key]
+                        best_key = key
+
+            if best_match:
+                new_components.append(best_match)
+                i += len(best_key)
+                changed = True
+            else:
+                new_components.append(components[i])
+                i += 1
+
+        components = new_components
+
+    return components
+
+def construct_word_tree(word):
+
+    # first get the components
     components = WORD_COMPONENTS[word]
 
+    # now preform any component or radical combination simplifications
+    components = simplify_components(components)
 
     trees = []
     # for each component check first if it is a radical
@@ -397,7 +482,7 @@ def construct_word_tree(word):
     return trees[0]
 
 
-def new_draw_words(sentence, filename, size=400, stroke=5):
+def new_draw_words(sentence, filename, size=200, stroke=5):
     words = sentence.split(' ')
 
     word_trees = []
@@ -419,4 +504,4 @@ def new_draw_words(sentence, filename, size=400, stroke=5):
     dwg.save()
 
 WORD_COMPONENTS = load_vocab()
-new_draw_words('guest', 'out.svg')
+new_draw_words('guy moon out fmale male time', 'out.svg')
