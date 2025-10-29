@@ -1,10 +1,10 @@
 act,執,1000,guy
 add,增,1000,guy
-air,氣,1000,guy
+air,氣,1000,air
 alc,酒,1000,guy
 all,全,1000,guy
 amt,幾,1000,guy
-and,而,1000,guy
+and,而,1000,and
 ans,答,1000,guy
 arm,臂,1000,guy
 ash,灰,1000,guy
@@ -26,7 +26,7 @@ beer,啤,1000,guy
 big,大,1000,guy
 bind,纍,1000,guy
 bird,鳥,1000,guy
-birth,產,1000,guy
+birth,產,1000,birth_r
 bite,咬,1000,guy
 black,黑,1000,guy
 bless,祝,1000,guy
@@ -147,7 +147,7 @@ ed,了,1000,guy
 edge,際,1000,guy
 eight,八,1000,guy
 else,別,1000,guy
-end,終,1000,guy
+end,終,1000,omega_r
 ent,入,1000,guy
 etch,雕,1000,guy
 eye,睛,1000,guy
@@ -163,7 +163,7 @@ fierce,猛,1000,guy
 fight,鬥,1000,guy
 filth,骯,1000,guy
 find,找,1000,guy
-fire,火,1000,guy
+fire,火,1000,fire_r
 firm,堅,1000,guy
 five,五,1000,guy
 fix,補,1000,guy
@@ -175,7 +175,7 @@ flood,洪,1000,guy
 flour,麵,1000,guy
 flow,流,1000,guy
 fly,飛,1000,guy
-fmale,女,1000,fmale
+fmale,女,1000,fmale_r
 fond,喜,1000,guy
 food,食,1000,guy
 foot,足,1000,guy
@@ -196,7 +196,8 @@ gap,間,1000,guy
 get,得,1000,guy
 give,予,1000,guy
 glad,樂,1000,guy
-go,行,1000,guy
+go,行,1000,go_r
+god,主,1000,alpha_r omega_r
 gold,金,1000,guy
 gone,亡,1000,guy
 good,好,1000,guy
@@ -281,9 +282,9 @@ loathe,厭,1000,guy
 long,長,1000,guy
 lot,多,1000,guy
 loud,咋,1000,guy
-love,爱,1000,guy fmale
+love,爱,1000,guy
 make,造,1000,guy
-male,男,1000,male
+male,男,1000,male_r
 max,限,1000,guy
 mean,陋,1000,guy
 meas,度,1000,guy
@@ -469,7 +470,7 @@ spill,撒,1000,guy
 spot,处,1000,guy
 spread,展,1000,guy
 stand,立,1000,guy
-start,始,1000,guy
+start,始,1000,alpha_r
 state,國,1000,guy
 steal,偷,1000,guy
 steam,汽,1000,guy
@@ -572,7 +573,7 @@ width,幅,1000,guy
 wild,狂,1000,guy
 will,會,1000,guy
 win,贏,1000,guy
-wind,風,1000,guy
+wind,風,1000,go_r air_r
 wise,智,1000,guy
 wish,願,1000,guy
 with,和,1000,guy

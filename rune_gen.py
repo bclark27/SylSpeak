@@ -146,8 +146,6 @@ class Character:
             return None
         return options[best_idx]
 
-
-
 class Composition:
     def __init__(self, op=None, sub_comp1=None, sub_comp2=None, leaf_char=None):
         self.op = op
@@ -307,7 +305,7 @@ class Composition:
         draw_node(self, pos_x, pos_y, size, size)
 
 RADICALS_DEFS = {
-    'guy': Character(
+    'guy_r': Character(
             Glyph(
                 'M 9 14 L 9 3 M 5 5 C 8 4 8 4 9 3 C 10 2 11 1 11 -1'
             ),
@@ -317,7 +315,7 @@ RADICALS_DEFS = {
                 ),
             ]
         ),
-    'moon': Character(
+    'moon_r': Character(
             Glyph(
                 'M 28 3 C 28 0 26 -2 23 -2 L 0 -2 L 0 20 C 0 23 2 25 4 25 L 6 25',
                 is_hollow=True
@@ -328,30 +326,30 @@ RADICALS_DEFS = {
                 ),
             ]
         ),
-    'out': Character(
+    'out_r': Character(
             Glyph(
                 'M 69 -94 L 69 -136 M 78 -104 L 43 -104 C 86 -140 39 -142 46 -125'
             )
         ),
-    'male': Character(
+    'male_r': Character(
             Glyph(
                 'M 0 0 C 20 0 20 30 0 30 C -20 30 -20 0 0 0 M 12 6 L 27 -9 C 25 -8 22 -8 16 -9 M 27 -9 C 26 -7 26 -4 27 2'
             )
         ),
-    'fmale': Character(
+    'fmale_r': Character(
             Glyph(
                 'M 0 0 C 20 0 20 30 0 30 C -20 30 -20 0 0 0 M 0 30 L 0 45 M -8 39 L 8 39',
                 margin=[0.05,0.15,0.05,0.15]
             )
         ),
-    'home': Character(
+    'home_r': Character(
             Glyph(
                 'M 22 36 C 26 24 25 11 25 -2 L 67 -2',
                 padding=[0.05,0.0,0.0,0.1],
                 is_hollow=True
             ),
         ),
-    'time': Character(
+    'time_r': Character(
             Glyph(
                 'M 11 4 L 11 33 M 11 9 C 17 5 34 2 34 9 C 34 12 33.3333 23 33 31 C 33 34 36 34 36 31 M 9 6 L 14 6',
                 is_hollow=True,
@@ -364,6 +362,87 @@ RADICALS_DEFS = {
                 ),
             ]
         ),
+    'omega_r': Character(
+            Glyph(
+                'M 15 -13 L 29 -13 C 14 -20 15 -42 35 -42 C 55 -42 55 -20 40 -13 L 54 -13'
+            ),
+            simplified_glyphs=[
+                Glyph(
+                    'M -5 -16 C -13 -13 -13 0 -5 0 C 0 0 3 -5 0 -13 C -3 -5 0 0 5 0 C 13 0 13 -13 5 -16',
+                ),
+            ]
+        ),
+    'alpha_r': Character(
+            Glyph(
+                'M 40 -54 C 39 -43 27 -21 18 -21 C 5 -21 5 -55 24 -55 C 34 -55 32 -37 38 -24 C 40 -19 44 -25 44 -27'
+            )
+        ),
+    'pi_r': Character(
+            Glyph(
+                'M 6 -13 L 40 -13 M 6 23 L 40 23 M 9 -13 L 9 23 M 37 -13 L 37 23',
+                is_hollow=True,
+                padding=[0.05,0.1,0.05,0.1],
+            ),
+            simplified_glyphs=[
+                Glyph(
+                    'M 15 -13 L 33 -13 M 15 23 L 33 23 M 20 -13 L 20 23 M 28 -13 L 28 23'
+                ),
+            ]
+        ),
+    'and_r': Character(
+            Glyph(
+                'M 6 13 L 6 -47 M 2 -53 C 6 -51 8 -49 9 -47 M 10 -51 L 59 -51 L 59 10 C 59 13 57 14 54 14 L 51 14',
+                is_hollow=True,
+                padding=[0.1, 0.05, 0.05, 0.1]
+            )
+        ),
+    'air_r': Character(
+            Glyph(
+                'M 0 -14 L 8 0 L -8 0 Z M -4 -7 L 4 -7',
+            ),
+            simplified_glyphs=[
+                Glyph(
+                    'M 0 0 L 0 -19 L 3 -16 M 0 -16 L 3 -13',
+                ),
+                Glyph(
+                    'M 0 0 L 4 -2 L 8 0 L 12 -2 M 0 2 L 4 0 L 8 2 L 12 0',
+                ),
+            ]
+        ),
+    'go_r': Character(
+            Glyph(
+                'M 0 -23 L 2 -11 L 0 0 L 23 0 M 0 -17 L 1 -11 L 0 -5',
+                is_hollow=True,
+                padding=[0.0,0.0,0.05,0.1],
+            ),
+            simplified_glyphs=[
+                Glyph(
+                    'M 0 0 L 0 -19 L 4 -15 L 1 -8 L 4 -1',
+                ),
+            ]
+        ),
+    'birth_r': Character(
+            Glyph(
+                'M 0 -30 L 0 0 L 7 -8 L 0 -15 L 6 -23 Z',
+                is_hollow=True,
+                padding=[0.1, 0.05, 0.05, 0.1]
+            )
+        ),
+    'fire_r': Character(
+            Glyph(
+                'M 0 0 L 2 -10 L 0 -19 L 21 -19',
+                is_hollow=True,
+                padding=[0.05,0.0,0.0,0.1],
+            ),
+            simplified_glyphs=[
+                Glyph(
+                    'M 0 0 L 11 -20 L 22 0 Z M 2 -8 L 6 -15 M 20 -8 L 16 -15',
+                ),
+                Glyph(
+                    'M 9 -26 L 11 -16 L 9 -5 M 10 -16 L 8 -22 M 10 -13 L 8 -16',
+                ),
+            ]
+        )
 }
 
 WORD_COMPONENTS = None
@@ -481,7 +560,6 @@ def construct_word_tree(word):
 
     return trees[0]
 
-
 def new_draw_words(sentence, filename, size=200, stroke=5):
     words = sentence.split(' ')
 
@@ -504,4 +582,4 @@ def new_draw_words(sentence, filename, size=200, stroke=5):
     dwg.save()
 
 WORD_COMPONENTS = load_vocab()
-new_draw_words('guy moon out fmale male time', 'out.svg')
+new_draw_words('wind', 'out.svg')
