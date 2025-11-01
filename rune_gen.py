@@ -718,7 +718,7 @@ class LogogramDrawer:
 
 
 
-class GoetianDrawer:
+class GoetianRuneDrawer:
     
     RADICALS_DEFS = {
         'a': Character(
@@ -742,12 +742,16 @@ class GoetianDrawer:
             ),
         'c': Character(
                 Glyph(
-                    'M 0 -22 L 0 -16 M 0 -10 L 0 -4 M 0 -19 C 14 -31 14 5 0 -7'
+                    'M 0 -22 L 0 -16 M 0 -10 L 0 -4 M 0 -19 C 14 -31 14 5 0 -7',
+                    is_hollow=True,
+                    padding=[0.15,0.2,0.15,0.1],
                 )
             ),
         'd': Character(
                 Glyph(
                     'M -22 0 L -16 0 M -10 0 L -4 0 M -19 0 C -31 -14 5 -14 -7 0',
+                    is_hollow=True,
+                    padding=[0.15,0.2,0.1,0.2],
                 ),
             ),
         'e': Character(
@@ -763,6 +767,8 @@ class GoetianDrawer:
         'g': Character(
                 Glyph(
                     'M 0 22 L 0 16 M 0 10 L 0 4 M 0 19 C -14 31 -14 -5 0 7',
+                    is_hollow=True,
+                    padding=[0.15,0.15,0.15,0.2],
                 ),
             ),
         'h': Character(
@@ -854,7 +860,7 @@ class GoetianDrawer:
         'x': Character(
                 Glyph(
                     'M -9 -4 L -1 -4 L -1 4 L -9 4 Z',
-                    is_hollow=True,
+                    is_hollow=False,
                     padding=[0.1,0.1,0.1,0.1],
                 ),
             ),
@@ -963,8 +969,14 @@ class GoetianDrawer:
 
     def sentence_to_svg_obj(self, dwg, sentence, size=200, stroke=5):
         
-        # first split the sentance up into chunks
-        chunks = self.chunk_cv(sentance.lower())
+        # first split the sentance up into chunks words
+        words = sentance.split(' ')
+
+        # now add all the chunks together
+        chunks = []
+        for word in words:
+            word_chunks = self.chunk_cv(word.lower())
+            chunks += word_chunks
 
         chunk_trees = []
         for chunk in chunks:
@@ -988,9 +1000,125 @@ class GoetianDrawer:
         return SvgObject(sentence_group, dims[0], dims[1])
 
 
+class GoetianSigilRingDrawer:
+
+    def __init__(self):
+        self.rune_drawer = GoetianRuneDrawer()
+
+    def create_polygon_with_circle(self, n_sides, radius, stroke="black", fill_polygon="none", fill_circle="none", stroke_width=1):
+        """
+        Create an SvgObject containing a regular N-sided polygon and an inscribed circle of radius R.
+        """
+        if n_sides < 3:
+            raise ValueError("Polygon must have at least 3 sides")
+        
+        dwg = svgwrite.Drawing()
+        group = dwg.g()  # Group to hold polygon + circle
+
+        # Center at (radius, radius)
+        cx, cy = radius, radius
+
+        # --- Polygon ---
+        points = []
+        for i in range(n_sides):
+            angle = 2 * math.pi * i / n_sides - math.pi/2  # start pointing up
+            x = cx + radius * math.cos(angle)
+            y = cy + radius * math.sin(angle)
+            points.append((x, y))
+        
+        poly = dwg.polygon(points=points, stroke=stroke, fill=fill_polygon, stroke_width=stroke_width)
+        group.add(poly)
+
+        # --- Inscribed circle ---
+        # circ = dwg.circle(center=(cx, cy), r=radius, stroke=stroke, fill=fill_circle, stroke_width=stroke_width)
+        # group.add(circ)
+
+        # SvgObject width/height = 2*radius to fully contain the shape
+        obj = SvgObject(group=group, width=2*radius, height=2*radius, center_x=radius, center_y=radius)
+        return obj
+
+    def sentence_to_svg_obj(self, dwg, sentence, radius=1000, run_size=200, stroke=5):
+
+        words = sentance.split(' ')
+
+        # save some room for the runes
+
+
+        return self.create_polygon_with_circle(len(words), size/2, stroke_width=stroke)
+
+class GoetianSigilCenterDrawer:
+    def __init__(self):
+        self.rune_drawer = GoetianRuneDrawer()
+    
+    def create_star_outer_triangles(self, n_triangles, base_length, stroke="black", fill="none", stroke_width=1):
+        """
+        Create an SvgObject of a star made of n outer triangles with given base length.
+        
+        :param n_triangles: Number of triangles around the circle
+        :param base_length: Length of each triangle base
+        """
+        if n_triangles < 2:
+            raise ValueError("Need at least 2 triangles")
+        
+        dwg = svgwrite.Drawing()
+        group = dwg.g()
+        
+        # Compute the radius of the circle where triangle bases lie
+        # Formula: radius = base_length / (2 * sin(pi / n_triangles))
+        r_base = base_length / (2 * math.sin(math.pi / n_triangles))
+        
+        # Triangle height: choose same as base length for nice proportions
+        h = base_length  # you can tweak this
+        
+        points_all = []
+
+        for i in range(n_triangles):
+            # Center angle for this triangle
+            theta = 2 * math.pi * i / n_triangles
+
+            # Base center coordinates on the circle
+            bx = r_base * math.cos(theta)
+            by = r_base * math.sin(theta)
+
+            # Base endpoints (perpendicular to radius)
+            perp_angle = theta + math.pi / 2
+            half_base = base_length / 2
+            x1 = bx + half_base * math.cos(perp_angle)
+            y1 = by + half_base * math.sin(perp_angle)
+            x2 = bx - half_base * math.cos(perp_angle)
+            y2 = by - half_base * math.sin(perp_angle)
+
+            # Tip coordinates (along radius)
+            tip_length = h
+            tx = bx + tip_length * math.cos(theta)
+            ty = by + tip_length * math.sin(theta)
+
+            tri = dwg.polygon(points=[(x1, y1), (x2, y2), (tx, ty)],
+                            stroke=stroke, fill=fill, stroke_width=stroke_width)
+            group.add(tri)
+            points_all.extend([(x1, y1), (x2, y2), (tx, ty)])
+
+        # Compute bounding box
+        xs = [p[0] for p in points_all]
+        ys = [p[1] for p in points_all]
+        min_x, max_x = min(xs), max(xs)
+        min_y, max_y = min(ys), max(ys)
+        width = max_x - min_x
+        height = max_y - min_y
+        center_x = width / 2 - min_x
+        center_y = height / 2 - min_y
+
+        # Shift group so top-left at (0,0)
+        group.translate(-min_x, -min_y)
+
+        obj = SvgObject(group=group, width=width, height=height, center_x=center_x, center_y=center_y)
+        return obj
+    def sentence_to_svg_obj(self, dwg, sentence, radius=1000, run_size=200, stroke=5):
+        return self.create_star_outer_triangles(8, 100, stroke_width=stroke)
+
 sentance = 'the quick brown fox jumped over the lazy dog'
 
-drawer = GoetianDrawer()
+drawer = GoetianSigilCenterDrawer()
 # drawer = LogogramDrawer()
 
 s = 400
