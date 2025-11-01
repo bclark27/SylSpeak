@@ -723,35 +723,149 @@ class GoetianDrawer:
     RADICALS_DEFS = {
         'a': Character(
                 Glyph(
-                    'M 9 14 L 9 3 M 5 5 C 8 4 8 4 9 3 C 10 2 11 1 11 -1'
+                    'M 0 0 L -7 -10 L 7 -10 Z'
                 ),
                 simplified_glyphs=[
-                    Glyph(
-                        'M 24 -67 C 37 -77 43 -86 48 -98 C 53 -86 59 -78 71 -67'
-                    ),
                 ]
             ),
         'b': Character(
                 Glyph(
-                    'M 28 3 C 28 0 26 -2 23 -2 L 0 -2 L 0 20 C 0 23 2 25 4 25 L 6 25',
-                    is_hollow=True
+                    'M 0 -19 V 0 M -2 -19 L 0 -19 C 16 -19 15 -20 15 -13 M 2 0 L -2 0',
+                    is_hollow=True,
+                    padding=[0.05,0.1,0.05,0.15],
                 ),
                 simplified_glyphs=[
                     Glyph(
-                        'M 32 -3 C -10 -17 -10 50 32 39 C 4 39 4 -3 32 -3'
-                    ),
+                        'M 0 -19 V 0 M -2 -19 L 0 -19 C 15 -19 15 0 0 0 L -2 0'
+                    )
                 ]
             ),
         'c': Character(
                 Glyph(
-                    'M 69 -94 L 69 -136 M 78 -104 L 43 -104 C 86 -140 39 -142 46 -125'
+                    'M 0 -22 L 0 -16 M 0 -10 L 0 -4 M 0 -19 C 14 -31 14 5 0 -7'
                 )
+            ),
+        'd': Character(
+                Glyph(
+                    'M -22 0 L -16 0 M -10 0 L -4 0 M -19 0 C -31 -14 5 -14 -7 0',
+                ),
             ),
         'e': Character(
                 Glyph(
-                    'M 6 -13 L 40 -13 M 6 23 L 40 23 M 9 -13 L 9 23 M 37 -13 L 37 23',
+                    'M -18 -20 L 3 -20 L -7 -2 Z M -13 -8 L -2 -8',
+                ),
+            ),
+        'f': Character(
+                Glyph(
+                    'M -17 -30 L -17 -9 M -20 -30 L -17 -30 C -8 -30 -8 -19 -17 -19',
+                ),
+            ),
+        'g': Character(
+                Glyph(
+                    'M 0 22 L 0 16 M 0 10 L 0 4 M 0 19 C -14 31 -14 -5 0 7',
+                ),
+            ),
+        'h': Character(
+                Glyph(
+                    'M 18 20 L -3 20 L 7 2 Z M 2 18 L 2 4',
+                ),
+            ),
+        'i': Character(
+                Glyph(
+                    'M 0 0 C -11 0 -11 15 0 15 C 11 15 11 0 0 0',
+                ),
+            ),
+        'j': Character(
+                Glyph(
+                    'M -8 7 C -8 8 -8 15 0 15 C 11 15 9 -7 -6 2 M -8 7 L 4 7',
+                ),
+            ),
+        'k': Character(
+                Glyph(
+                    'M -9 0 L -6 0 M -2 0 L 1 0 M -8 0 L -4 -7 L 0 0',
+                ),
+            ),
+        'l': Character(
+                Glyph(
+                    'M -6 -9 L -6 -6 M -6 -8 L 4 -8 L 4 5',
+                    is_hollow=True,
+                    padding=[0.1,0.1,0,0.05],
+                ),
+            ),
+        'm': Character(
+                Glyph(
+                    'M 6 8 L 6 6 M 6 8 L -4 8 L -4 -5',
+                    is_hollow=True,
+                    padding=[0,0,0.1,0.1],
+                ),
+            ),
+        'n': Character(
+                Glyph(
+                    'M -8 -8 L -8 8 L 0 -8 L 0 8',
+                ),
+            ),
+        'o': Character(
+                Glyph(
+                    'M 0 0 C 8 0 8 12 0 12 C -8 12 -8 0 0 0 M 0 0 L 0 12',
+                ),
+            ),
+        'p': Character(
+                Glyph(
+                    'M 0 -14 L 0 6 M -2 6 L 0 6 C 8 6 8 -6 0 -6 M -2 -14 L 3 -14',
+                ),
+            ),
+        'q': Character(
+                Glyph(
+                    'M 0 -5 L 5 0 L 0 5 L -5 0 Z',
+                ),
+            ),
+        'r': Character(
+                Glyph(
+                    'M -8 0 L -8 -20 L 8 -20 L 8 0 M -9 0 L -6 0 M 9 0 L 6 0',
                     is_hollow=True,
                     padding=[0.05,0.1,0.05,0.1],
+                ),
+            ),
+        's': Character(
+                Glyph(
+                    'M 0 0 C 8 0 8 12 0 12 C -8 12 -8 0 0 0 M -6 6 L 6 6',
+                ),
+            ),
+        't': Character(
+                Glyph(
+                    'M -5 4 L -1 8 L 3 4 M -1 8 L -1 14',
+                ),
+            ),
+        'u': Character(
+                Glyph(
+                    'M 0 2 L -3 5 L 0 8',
+                ),
+            ),
+        'v': Character(
+                Glyph(
+                    'M 9 -0 L 6 -0 M 2 -0 L -1 0 M 8 -0 L 4 7 L 0 0',
+                ),
+            ),
+        'w': Character(
+                Glyph(
+                    'M -9 -4 L -1 -4 L -9 4',
+                ),
+            ),
+        'x': Character(
+                Glyph(
+                    'M -9 -4 L -1 -4 L -1 4 L -9 4 Z',
+                    is_hollow=True,
+                    padding=[0.1,0.1,0.1,0.1],
+                ),
+            ),
+        'y': Character(
+                Glyph(
+                    'M -3 -7 L -12 2 M -12 -7 L -5 0',
+                ),
+            ),
+        'z': Character(
+                Glyph(
+                    'M -13 -3 L -9 -3 L -13 -7 L -1 -7 L -5 -3 L -1 -3',
                 ),
             ),
     }
@@ -825,8 +939,11 @@ class GoetianDrawer:
                 trees.append(Composition(leaf_char=self.RADICALS_DEFS[component]))
             else:
                 print(f"WARNING: '{component}' not a radical or word")
-
+        
         l = len(trees)
+        
+        if l == 0:
+            return None
         while l > 1:
             idx = l - 2
             comp1 = trees[idx]
@@ -852,10 +969,12 @@ class GoetianDrawer:
         chunk_trees = []
         for chunk in chunks:
             chunk_tree = self.construct_word_tree(chunk)
+            if chunk_tree is None:
+                continue
             chunk_trees.append(chunk_tree)
 
         char_gap = size / 8
-        dims = ((size * len(chunks)) + ((len(chunks) - 1) * char_gap), size)
+        dims = ((size * len(chunk_trees)) + ((len(chunk_trees) - 1) * char_gap), size)
 
         sentence_group = dwg.g()
         x = 0
@@ -869,13 +988,14 @@ class GoetianDrawer:
         return SvgObject(sentence_group, dims[0], dims[1])
 
 
-sentance = 'abe cb'
+sentance = 'the quick brown fox jumped over the lazy dog'
 
 drawer = GoetianDrawer()
 # drawer = LogogramDrawer()
 
 s = 400
 dwg = svgwrite.Drawing('out.svg')
+dwg.add(dwg.rect(insert=(0, 0), size=("100%", "100%"), fill="white"))
 s = drawer.sentence_to_svg_obj(dwg, sentance)
 dwg['width'] = s.width
 dwg['height'] = s.height
