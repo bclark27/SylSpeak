@@ -1,3 +1,6 @@
+TEST1,a,1000,TEST2 TEST3 TEST2 TEST3 TEST2
+TEST2,a,1000,guy_r stream_r
+TEST3,a,1000,pi_r fire_r
 act,執,1000,guy
 add,增,1000,guy
 air,氣,1000,air

@@ -554,7 +554,13 @@ def simplify_components(components):
 def construct_word_tree(word):
 
     # first get the components
-    components = WORD_COMPONENTS[word]
+    components = []
+    if word in WORD_COMPONENTS:
+        components = WORD_COMPONENTS[word]
+    elif word in RADICALS_DEFS:
+        components = [word]
+    else:
+        print(f"WARNING: '{word}' not a word or radical")
 
     # now preform any component or radical combination simplifications
     components = simplify_components(components)
@@ -608,4 +614,4 @@ def new_draw_words(sentence, filename, size=200, stroke=5):
     dwg.save()
 
 WORD_COMPONENTS = load_vocab()
-new_draw_words('stream', 'out.svg')
+new_draw_words('TEST1', 'out.svg')
