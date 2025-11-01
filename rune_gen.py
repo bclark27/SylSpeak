@@ -4,6 +4,7 @@ from enum import Enum
 import random
 import svgwrite
 import math
+import copy
 
 class CompositionOp(Enum):
     VERT=1
@@ -13,6 +14,88 @@ class CompositionOp(Enum):
 
 MARG_DEF = 0.03
 PADD_DEF = 0.07
+
+class SvgObject:
+    def __init__(self, group, width, height, center_x=0, center_y=0):
+        self.group = group
+        self.width = width
+        self.height = height
+        self.center_x = center_x
+        self.center_y = center_y
+
+        # Absolute transform state
+        self.x = 0
+        self.y = 0
+        self.angle = 0
+        self.scale_x = 1
+        self.scale_y = 1
+
+        # Transform origin as normalized coordinates inside bounding box
+        self.origin_rel_x = 0.5
+        self.origin_rel_y = 0.5
+
+    # --- Public setters ---
+    def set_xy(self, new_x, new_y):
+        self.x = new_x
+        self.y = new_y
+        self._update_transform()
+
+    def set_rotate(self, angle):
+        self.angle = angle
+        self._update_transform()
+
+    def set_scale(self, scale_x, scale_y=None):
+        self.scale_x = scale_x
+        self.scale_y = scale_y if scale_y is not None else scale_x
+        self._update_transform()
+
+    def set_origin(self, rel_x, rel_y):
+        """Set rotation/scale origin as relative coordinates inside [0,1]x[0,1]"""
+        self.origin_rel_x = rel_x
+        self.origin_rel_y = rel_y
+        self._update_transform()
+
+    # --- Internal helpers ---
+    def _update_transform(self):
+        transforms = []
+
+        # Compute the absolute origin point (inside local bounding box)
+        origin_abs_x = self.width * self.origin_rel_x
+        origin_abs_y = self.height * self.origin_rel_y
+
+        # Apply transformations in SVG order: translate → rotate → scale
+        if self.x != 0 or self.y != 0:
+            transforms.append(f"translate({self.x},{self.y})")
+
+        if self.angle != 0:
+            transforms.append(f"rotate({self.angle},{origin_abs_x},{origin_abs_y})")
+
+        if self.scale_x != 1 or self.scale_y != 1:
+            transforms.append(f"scale({self.scale_x},{self.scale_y})")
+
+        # Set or remove transform attribute
+        if transforms:
+            self.group.attribs['transform'] = " ".join(transforms)
+        elif 'transform' in self.group.attribs:
+            del self.group.attribs['transform']
+
+    # --- Drawing methods ---
+    def draw_to_canvas(self, dwg):
+        """Draw this object directly into the drawing"""
+        self._draw_to_parent(dwg)
+
+    def draw_to_group(self, parent_group):
+        """Draw this object into a given parent group (nested)"""
+        self._draw_to_parent(parent_group)
+
+    def _draw_to_parent(self, parent):
+        """Internal helper for drawing to either canvas or group"""
+        cpy = copy.deepcopy(self.group)
+        transform_value = self.group.attribs.get('transform')
+        if transform_value:
+            cpy.attribs['transform'] = transform_value
+        parent.add(cpy)
+
 
 # --- Glyph definition ---
 class Glyph:
@@ -67,7 +150,7 @@ class Glyph:
         p = p.translated(-complex(minx, miny))
         return p
 
-    def draw(self, dwg, draw_w, draw_h, x, y, stroke):
+    def draw(self, dwg, parent, draw_w, draw_h, x, y, stroke):
 
         p = self.path
    
@@ -94,7 +177,12 @@ class Glyph:
         # translate optional amount outside the bounds
         p = p.translated(complex(draw_w * self.translate[0], draw_h * self.translate[1]))
         
-        dwg.add(dwg.path(d=p.d(), stroke='black', fill='none', stroke_width=stroke))
+        parent.add(dwg.path(
+            d=p.d(), 
+            stroke='black', 
+            fill='none', 
+            stroke_width=stroke
+        ))
 
 
 class Character:
@@ -102,14 +190,14 @@ class Character:
         self.main_glyph = main_glyph
         self.simplified_glyphs = simplified_glyphs
 
-    def draw(self, dwg, draw_w, draw_h, x, y, stroke, can_simplify):
+    def draw(self, dwg, parent, draw_w, draw_h, x, y, stroke, can_simplify):
         if can_simplify:
             best_fit = self.get_best_filled_glyph((draw_h, draw_w))
             if best_fit is None:
                 best_fit = self.get_best_glyph((draw_h, draw_w))
-            best_fit.draw(dwg, draw_w, draw_h, x, y, stroke)
+            best_fit.draw(dwg, parent, draw_w, draw_h, x, y, stroke)
         else:
-            self.main_glyph.draw(dwg, draw_w, draw_h, x, y, stroke)
+            self.main_glyph.draw(dwg, parent, draw_w, draw_h, x, y, stroke)
 
     def closest_aspect_ratio_index(glyphs, ref_hw):
         """
@@ -244,12 +332,15 @@ class Composition:
             self.op = CompositionOp.HORZ
             self.sub_comp1_percent = horz_sub1_percent
 
-    def draw_svg(self, dwg, pos_x, pos_y, size=400, stroke=5):
+    def create_svg_obj(self, dwg, size=400, stroke=5):
         """
         Draws this composition as an independent SVG.
         - size: final image size in pixels (square)
         - stroke: stroke width in pixels
         """
+
+        group = dwg.g()
+
         def draw_node(comp, x, y, w, h, char_is_empty=True):
             """
             Recursive helper to draw a composition node.
@@ -260,7 +351,7 @@ class Composition:
             # Add a tiny gap for stacked compositions
 
             if comp.is_leaf():
-                comp.leaf_char.draw(dwg, w, h, x, y, stroke, char_is_empty)
+                comp.leaf_char.draw(dwg, group, w, h, x, y, stroke, char_is_empty)
 
             elif comp.op == CompositionOp.VERT:
                 # Vertical stack: divide height according to sub_comp1_percent
@@ -302,7 +393,10 @@ class Composition:
                 raise ValueError(f"Unknown composition operation: {comp.op}")
 
         # Start recursive drawing
-        draw_node(self, pos_x, pos_y, size, size)
+        draw_node(self, 0, 0, size, size)
+
+        svg_obj = SvgObject(group, size, size, 0, 0)
+        return svg_obj
 
 RADICALS_DEFS = {
     'guy_r': Character(
@@ -592,7 +686,7 @@ def construct_word_tree(word):
 
     return trees[0]
 
-def new_draw_words(sentence, filename, size=200, stroke=5):
+def sentence_to_svg_obj(dwg, sentence, size=200, stroke=5):
     words = sentence.split(' ')
 
     word_trees = []
@@ -602,16 +696,28 @@ def new_draw_words(sentence, filename, size=200, stroke=5):
 
     char_gap = size / 8
     dims = ((size * len(words)) + ((len(words) - 1) * char_gap), size)
-    dwg = svgwrite.Drawing(filename, size=dims)
-    dwg.add(dwg.rect(insert=(0, 0), size=dims, fill='white'))
 
+    sentence_group = dwg.g()
     x = 0
     for i in range(len(word_trees)):
         t = word_trees[i]
-        t.draw_svg(dwg, x, 0, size, stroke)
+        svg_obj = t.create_svg_obj(dwg, size, stroke)
+        svg_obj.set_xy(x, 0)
+        svg_obj.draw_to_group(sentence_group)
         x += size + char_gap
 
-    dwg.save()
+    return SvgObject(sentence_group, dims[0], dims[1])
 
 WORD_COMPONENTS = load_vocab()
-new_draw_words('TEST1', 'out.svg')
+
+s = 400
+
+dwg = svgwrite.Drawing('out.svg', size=(s,s))
+svg_obj = sentence_to_svg_obj(dwg, 'TEST1 TEST2', s)
+
+dwg['width'] = svg_obj.width
+dwg['height'] = svg_obj.height
+dwg.add(dwg.rect(insert=(0, 0), size=(svg_obj.width,svg_obj.height), fill='white'))
+
+svg_obj.draw_to_canvas(dwg)
+dwg.save()
