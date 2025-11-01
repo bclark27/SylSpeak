@@ -718,22 +718,166 @@ class LogogramDrawer:
 
 
 
+class GoetianDrawer:
+    
+    RADICALS_DEFS = {
+        'a': Character(
+                Glyph(
+                    'M 9 14 L 9 3 M 5 5 C 8 4 8 4 9 3 C 10 2 11 1 11 -1'
+                ),
+                simplified_glyphs=[
+                    Glyph(
+                        'M 24 -67 C 37 -77 43 -86 48 -98 C 53 -86 59 -78 71 -67'
+                    ),
+                ]
+            ),
+        'b': Character(
+                Glyph(
+                    'M 28 3 C 28 0 26 -2 23 -2 L 0 -2 L 0 20 C 0 23 2 25 4 25 L 6 25',
+                    is_hollow=True
+                ),
+                simplified_glyphs=[
+                    Glyph(
+                        'M 32 -3 C -10 -17 -10 50 32 39 C 4 39 4 -3 32 -3'
+                    ),
+                ]
+            ),
+        'c': Character(
+                Glyph(
+                    'M 69 -94 L 69 -136 M 78 -104 L 43 -104 C 86 -140 39 -142 46 -125'
+                )
+            ),
+        'e': Character(
+                Glyph(
+                    'M 6 -13 L 40 -13 M 6 23 L 40 23 M 9 -13 L 9 23 M 37 -13 L 37 23',
+                    is_hollow=True,
+                    padding=[0.05,0.1,0.05,0.1],
+                ),
+            ),
+    }
+    
+    def __init__(self):
+        pass
+
+    def chunk_cv(self, word, allowed_chars=None):
+        """
+        Break word into contiguous consonant-vowel chunks.
+        Leading vowels are lumped with the first consonant cluster.
+        Skips characters not in allowed_chars.
+        """
+        if allowed_chars is None:
+            allowed_chars = set("abcdefghijklmnopqrstuvwxyz")
+        
+        vowels = set("aeiouy")
+        chunks = []
+        i = 0
+        n = len(word)
+        
+        current_chunk = ""
+        first_chunk = True
+
+        while i < n:
+            c = word[i].lower()
+            i += 1
+
+            if c not in allowed_chars:
+                # skip unallowed characters without breaking the chunk
+                continue
+
+            if not current_chunk:
+                # Start a new chunk
+                current_chunk += c
+            else:
+                # Determine last char type
+                last_char = current_chunk[-1].lower()
+                last_is_vowel = last_char in vowels
+                current_is_vowel = c in vowels
+
+                if last_is_vowel and not current_is_vowel:
+                    # Start a new chunk when switching from vowel->consonant
+                    chunks.append(current_chunk)
+                    current_chunk = c
+                else:
+                    current_chunk += c
+
+        # Append the last chunk
+        if current_chunk:
+            chunks.append(current_chunk)
+
+        # Special handling for leading vowels at the start
+        if first_chunk and chunks:
+            if chunks[0][0].lower() in vowels and len(chunks) > 1:
+                # merge leading vowels with next consonant cluster
+                chunks[0] += chunks.pop(1)
+
+        return chunks
 
 
-l = LogogramDrawer()
+
+    def construct_word_tree(self, word):
+
+        # first get the components
+        components = list(word)
+        trees = []
+        # for each component check first if it is a radical
+        for component in components:
+            if component in self.RADICALS_DEFS:
+                trees.append(Composition(leaf_char=self.RADICALS_DEFS[component]))
+            else:
+                print(f"WARNING: '{component}' not a radical or word")
+
+        l = len(trees)
+        while l > 1:
+            idx = l - 2
+            comp1 = trees[idx]
+            comp2 = trees.pop(idx + 1)
+            newComp = Composition(
+                sub_comp1=comp1,
+                sub_comp2=comp2
+            )
+
+            trees[idx] = newComp
+            l = len(trees)
+
+        trees[0].calc_constructions(True)
+
+        return trees[0]
+
+
+    def sentence_to_svg_obj(self, dwg, sentence, size=200, stroke=5):
+        
+        # first split the sentance up into chunks
+        chunks = self.chunk_cv(sentance.lower())
+
+        chunk_trees = []
+        for chunk in chunks:
+            chunk_tree = self.construct_word_tree(chunk)
+            chunk_trees.append(chunk_tree)
+
+        char_gap = size / 8
+        dims = ((size * len(chunks)) + ((len(chunks) - 1) * char_gap), size)
+
+        sentence_group = dwg.g()
+        x = 0
+        for i in range(len(chunk_trees)):
+            t = chunk_trees[i]
+            svg_obj = t.create_svg_obj(dwg, size, stroke)
+            svg_obj.set_xy(x, 0)
+            svg_obj.draw_to_group(sentence_group)
+            x += size + char_gap
+
+        return SvgObject(sentence_group, dims[0], dims[1])
+
+
+sentance = 'abe cb'
+
+drawer = GoetianDrawer()
+# drawer = LogogramDrawer()
 
 s = 400
 dwg = svgwrite.Drawing('out.svg')
-s = l.sentence_to_svg_obj(dwg, 'TEST1')
+s = drawer.sentence_to_svg_obj(dwg, sentance)
 dwg['width'] = s.width
 dwg['height'] = s.height
 s.draw_to_canvas(dwg)
 dwg.save()
-
-# WORD_COMPONENTS = load_vocab()
-
-
-
-# dwg.add(dwg.rect(insert=(0, 0), size=(svg_obj.width,svg_obj.height), fill='white'))
-
-
