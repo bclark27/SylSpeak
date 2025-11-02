@@ -1356,32 +1356,34 @@ class GoerianSigilDrawer:
         self.poly_drawer = GoerianSigilPolyDrawer()
         self.rune_drawer = GoetianRuneDrawer()
 
-    def draw_to_svg_obj(self, sentence, rune_size=200, stroke_width=10):
+    def draw_to_svg_obj(self, sentence, rune_size=200, stroke_width=10, pattern=[6,3,7,4,6,4,7,13,17,6]):
 
         rune_svgs = self.rune_drawer.draw_to_svg_objs(sentence, rune_size, stroke_width)
 
         dwg = svgwrite.Drawing()
         group = dwg.g()
-
-        chunk_pattern = [6,3,7,4,6,4,7,13,17,6]
-        rune_svg_groups = chunk_by_pattern(rune_svgs, chunk_pattern)
-
-        # ring1 = self.ring_drawer.draw_to_svg_obj(runes1, inner_radius=start_radius, stroke_width=stroke_width, rune_size=rune_size)
-        # ring1.draw_to_group(group)
-        
+\
+        rune_svg_groups = chunk_by_pattern(rune_svgs, pattern)
+       
         sigil_svgs = []
         start_radius = rune_size * 4
         current_max_radius = start_radius
         ring_space = rune_size / 8
         
-        for i in range(len(rune_svg_groups)):
-
-            if i == 0:
-                center_peice_svg = star_with_construction(len(rune_svg_groups[0]), start_radius, stroke=stroke_width)
-                sigil_svgs.append(center_peice_svg)
-
+        group_count = len(rune_svg_groups)
+        for i in range(group_count):
             rune_group = rune_svg_groups[i]
             sigil_svg = None
+
+            if i == 0:
+                center_peice_svg = star_with_construction(len(rune_group), start_radius, stroke=stroke_width)
+                sigil_svgs.append(center_peice_svg)
+
+            if i != 0 and i % 6 == 0:
+                start_deco = star_with_construction(len(rune_group), current_max_radius * 1.2, inner_r=current_max_radius, stroke=stroke_width)
+                sigil_svgs.append(start_deco)
+                current_max_radius = start_deco.width / 2
+
             if i % 3 == 0:
                 sigil_svg = self.poly_drawer.draw_to_svg_obj(rune_group, inner_radius=current_max_radius, stroke_width=stroke_width, rune_size=rune_size)
                 current_max_radius = sigil_svg.width / 2 + ring_space
