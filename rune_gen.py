@@ -1,10 +1,12 @@
 from svgpathtools import parse_path
 from svgpathtools import Path
+import svgpathtools
 from enum import Enum
 import random
 import svgwrite
 import math
 import copy
+import cmath
 
 class CompositionOp(Enum):
     VERT=1
@@ -101,6 +103,10 @@ class SvgObject:
 
 # --- Glyph definition ---
 class Glyph:
+
+    use_detailed_glyphs = False
+    detailed_steps = 30
+
     def __init__(self, 
                 path_str, 
                 is_hollow=False,
@@ -153,38 +159,96 @@ class Glyph:
         return p
 
     def draw(self, dwg, parent, draw_w, draw_h, x, y, stroke):
+        """Draws each segment of the glyph path, thickening from min to max stroke width within each segment."""
 
         p = self.path
-   
+
+        # --- Scale & position path as before ---
         minx, maxx, miny, maxy = p.bbox()
         path_width = maxx - minx
         path_height = maxy - miny
 
         scale_x = draw_w / path_width
         scale_y = draw_h / path_height
-        
-        # scale to fit the draw canvas size
         p = p.scaled(scale_x, scale_y)
-        # flip on the y axis
         p = p.scaled(1, -1)
-        # scale it down to fit the margins
         p = p.scaled(1 - (self.margin[1] + self.margin[3]), 1 - (self.margin[0] + self.margin[2]))
-        
-        # Translate to top-left of allocated box
         p = p.translated(complex(x, y + draw_h))
-
-        # translate the path to go into the middle of the margin
         p = p.translated(complex(draw_w * self.margin[3], -draw_h * self.margin[2]))
-        
-        # translate optional amount outside the bounds
         p = p.translated(complex(draw_w * self.translate[0], draw_h * self.translate[1]))
-        
-        parent.add(dwg.path(
-            d=p.d(), 
-            stroke='black', 
-            fill='none', 
-            stroke_width=stroke
-        ))
+
+        if not self.use_detailed_glyphs:
+            parent.add(dwg.path(
+                d=p.d(), 
+                stroke='black', 
+                fill='none', 
+                stroke_width=stroke
+            ))
+
+            return
+
+        g = dwg.g()
+
+        min_stroke = 2
+        max_stroke = stroke
+
+        # --- For each SVG segment ---
+        for seg in p:
+            prev_point = seg.point(0)
+
+            for i in range(1, self.detailed_steps + 1):
+                t0 = (i - 1) / self.detailed_steps
+                t1 = i / self.detailed_steps
+
+                # Sample along the segment
+                p0 = seg.point(t0)
+                p1 = seg.point(t1)
+
+                # Local interpolation of stroke width
+                local_t = t1
+                stroke_w = min_stroke + (max_stroke - min_stroke) * local_t
+
+                # Draw this little line piece
+                g.add(dwg.line(
+                    start=(p0.real, p0.imag),
+                    end=(p1.real, p1.imag),
+                    stroke='black',
+                    stroke_width=stroke_w,
+                    stroke_linecap='round'
+                ))
+            
+            if seg == p[-1]:  # only for the last path segment
+                end_point = seg.point(1)
+                tangent = seg.derivative(1)
+                angle = math.atan2(tangent.imag, tangent.real)
+
+                # --- Configure flick behavior ---
+                flick_angle = angle - math.radians(random.uniform(20, 40))  # angled back a bit
+                flick_len = 0.2 * draw_w                              # small compared to total width
+                steps = 10                                                   # steps along flick line
+
+                # Compute flick path points
+                for i in range(steps):
+                    t0 = i / steps
+                    t1 = (i + 1) / steps
+
+                    start_p = end_point + cmath.rect(flick_len * t0, flick_angle)
+                    end_p   = end_point + cmath.rect(flick_len * t1, flick_angle)
+
+                    # taper stroke width from max_stroke → 0
+                    stroke_w = max_stroke * (1 - t1)
+
+                    parent.add(dwg.line(
+                        start=(start_p.real, start_p.imag),
+                        end=(end_p.real, end_p.imag),
+                        stroke='black',
+                        stroke_width=stroke_w,
+                        stroke_linecap='round',
+                        opacity=1 - t1  # fade out a bit
+                    ))
+
+
+        parent.add(g)
 
 
 class Character:
@@ -717,12 +781,9 @@ class LogogramDrawer:
 
         return SvgObject(sentence_group, dims[0], dims[1])
 
-
-
-
 class GoetianRuneDrawer:
     
-    RADICALS_DEFS = {
+    RUNES1 = {
         'a': Character(
                 Glyph(
                     'M 0 0 L -7 -10 L 7 -10 Z'
@@ -878,10 +939,170 @@ class GoetianRuneDrawer:
             ),
     }
     
+    RUNES2 = {
+        'a': Character(
+                Glyph(
+                    'M 0 0 L -7 -10 L 7 -10 Z'
+                ),
+                simplified_glyphs=[
+                ]
+            ),
+        'b': Character(
+                Glyph(
+                    'M 0 -19 V 0 M -2 -19 L 0 -19 C 16 -19 15 -20 15 -13 M 2 0 L -2 0',
+                    is_hollow=True,
+                    padding=[0.05,0.1,0.05,0.15],
+                ),
+                simplified_glyphs=[
+                    Glyph(
+                        'M 0 -19 V 0 M -2 -19 L 0 -19 C 15 -19 15 0 0 0 L -2 0'
+                    )
+                ]
+            ),
+        'c': Character(
+                Glyph(
+                    'M 0 -22 L 0 -16 M 0 -10 L 0 -4 M 0 -19 C 14 -31 14 5 0 -7',
+                    is_hollow=True,
+                    padding=[0.15,0.2,0.15,0.1],
+                )
+            ),
+        'd': Character(
+                Glyph(
+                    'M -22 0 L -16 0 M -10 0 L -4 0 M -19 0 C -31 -14 5 -14 -7 0',
+                    is_hollow=True,
+                    padding=[0.15,0.2,0.1,0.2],
+                ),
+            ),
+        'e': Character(
+                Glyph(
+                    'M -18 -20 L 3 -20 L -7 -2 Z M -13 -8 L -2 -8',
+                ),
+            ),
+        'f': Character(
+                Glyph(
+                    'M -17 -30 L -17 -9 M -20 -30 L -17 -30 C -8 -30 -8 -19 -17 -19',
+                ),
+            ),
+        'g': Character(
+                Glyph(
+                    'M 0 22 L 0 16 M 0 10 L 0 4 M 0 19 C -14 31 -14 -5 0 7',
+                    is_hollow=True,
+                    padding=[0.15,0.15,0.15,0.2],
+                ),
+            ),
+        'h': Character(
+                Glyph(
+                    'M 18 20 L -3 20 L 7 2 Z M 2 18 L 2 4',
+                ),
+            ),
+        'i': Character(
+                Glyph(
+                    'M 0 0 C -11 0 -11 15 0 15 C 11 15 11 0 0 0',
+                ),
+            ),
+        'j': Character(
+                Glyph(
+                    'M -8 7 C -8 8 -8 15 0 15 C 11 15 9 -7 -6 2 M -8 7 L 4 7',
+                ),
+            ),
+        'k': Character(
+                Glyph(
+                    'M -9 0 L -6 0 M -2 0 L 1 0 M -8 0 L -4 -7 L 0 0',
+                ),
+            ),
+        'l': Character(
+                Glyph(
+                    'M -6 -9 L -6 -6 M -6 -8 L 4 -8 L 4 5',
+                    is_hollow=True,
+                    padding=[0.1,0.1,0,0.05],
+                ),
+            ),
+        'm': Character(
+                Glyph(
+                    'M 6 8 L 6 6 M 6 8 L -4 8 L -4 -5',
+                    is_hollow=True,
+                    padding=[0,0,0.1,0.1],
+                ),
+            ),
+        'n': Character(
+                Glyph(
+                    'M -8 -8 L -8 8 L 0 -8 L 0 8',
+                ),
+            ),
+        'o': Character(
+                Glyph(
+                    'M 0 0 C 8 0 8 12 0 12 C -8 12 -8 0 0 0 M 0 0 L 0 12',
+                ),
+            ),
+        'p': Character(
+                Glyph(
+                    'M 0 -14 L 0 6 M -2 6 L 0 6 C 8 6 8 -6 0 -6 M -2 -14 L 3 -14',
+                ),
+            ),
+        'q': Character(
+                Glyph(
+                    'M 0 -5 L 5 0 L 0 5 L -5 0 Z',
+                ),
+            ),
+        'r': Character(
+                Glyph(
+                    'M -8 0 L -8 -20 L 8 -20 L 8 0 M -9 0 L -6 0 M 9 0 L 6 0',
+                    is_hollow=True,
+                    padding=[0.05,0.1,0.05,0.1],
+                ),
+            ),
+        's': Character(
+                Glyph(
+                    'M 0 0 C 8 0 8 12 0 12 C -8 12 -8 0 0 0 M -6 6 L 6 6',
+                ),
+            ),
+        't': Character(
+                Glyph(
+                    'M -5 4 L -1 8 L 3 4 M -1 8 L -1 14',
+                ),
+            ),
+        'u': Character(
+                Glyph(
+                    'M 0 2 L -3 5 L 0 8',
+                ),
+            ),
+        'v': Character(
+                Glyph(
+                    'M 9 -0 L 6 -0 M 2 -0 L -1 0 M 8 -0 L 4 7 L 0 0',
+                ),
+            ),
+        'w': Character(
+                Glyph(
+                    'M -9 -4 L -1 -4 L -9 4',
+                ),
+            ),
+        'x': Character(
+                Glyph(
+                    'M -9 -4 L -1 -4 L -1 4 L -9 4 Z',
+                    is_hollow=False,
+                    padding=[0.1,0.1,0.1,0.1],
+                ),
+            ),
+        'y': Character(
+                Glyph(
+                    'M -3 -7 L -12 2 M -12 -7 L -5 0',
+                ),
+            ),
+        'z': Character(
+                Glyph(
+                    'M -13 -3 L -9 -3 L -13 -7 L -1 -7 L -5 -3 L -1 -3',
+                ),
+            ),
+    }
+
+    SVG_CHARS = RUNES1
+
     def __init__(self):
         pass
 
     def chunk_cv(self, word, allowed_chars=None):
+        # n = 1
+        # return [word[i:i + n] for i in range(0, len(word), n)]
         """
         Break word into contiguous consonant-vowel chunks.
         Leading vowels are lumped with the first consonant cluster.
@@ -941,8 +1162,8 @@ class GoetianRuneDrawer:
         trees = []
         # for each component check first if it is a radical
         for component in components:
-            if component in self.RADICALS_DEFS:
-                trees.append(Composition(leaf_char=self.RADICALS_DEFS[component]))
+            if component in self.SVG_CHARS:
+                trees.append(Composition(leaf_char=self.SVG_CHARS[component]))
             else:
                 print(f"WARNING: '{component}' not a radical or word")
         
@@ -966,7 +1187,7 @@ class GoetianRuneDrawer:
 
         return trees[0]
 
-    def sentence_to_svg_objs(self, sentence, size=200, stroke_width=5):
+    def draw_to_svg_objs(self, sentence, size=200, stroke_width=5):
         
         # first split the sentance up into chunks words
         words = sentance.split(' ')
@@ -995,9 +1216,9 @@ class GoetianRuneDrawer:
 
         return svgs
 
-    def sentence_to_svg_obj(self, sentence, size=200, stroke_width=5):
+    def draw_to_svg_obj(self, sentence, size=200, stroke_width=5):
         
-        svgs = self.sentence_to_svg_objs(sentance, size, stroke_width)
+        svgs = self.draw_to_svg_objs(sentance, size, stroke_width)
 
         dwg = svgwrite.Drawing()
         sentence_group = dwg.g()
@@ -1011,13 +1232,12 @@ class GoetianRuneDrawer:
         dims = ((size * len(svgs)) + ((len(svgs) - 1) * char_gap), size)
         return SvgObject(sentence_group, dims[0], dims[1])
 
-
 def draw_ring(group, radius, x, y, stroke="black", stroke_width=5, fill="none"):
     dwg = svgwrite.Drawing()
     circle = dwg.circle(center=(x, y), r=radius, stroke=stroke, fill=fill, stroke_width=stroke_width)
     group.add(circle)
 
-def create_line(group, x1, y1, x2, y2, stroke="black", stroke_width=5):
+def draw_line(group, x1, y1, x2, y2, stroke="black", stroke_width=5):
     """
     Create an SvgObject containing a line from (x1, y1) to (x2, y2).
     """
@@ -1026,6 +1246,17 @@ def create_line(group, x1, y1, x2, y2, stroke="black", stroke_width=5):
     group.add(line)
 
     return group
+
+def draw_poly_triangle(group, base, n, stroke_width=5):
+    angle = 360 / n
+    angle = (angle / 360) * 2 * math.pi
+    h = base * math.tan(angle) / 2
+
+    draw_line(group, 0, h, base, h, stroke_width=stroke_width)
+    draw_line(group, base/2, 0, base, h, stroke_width=stroke_width)
+    draw_line(group, base/2, 0, 0, h, stroke_width=stroke_width)
+
+    return h
 
 def point_on_circle(radius, center_x, center_y, num_points, index):
     """
@@ -1049,43 +1280,11 @@ def distance_between_points(radius, num_points):
     if num_points < 2:
         raise ValueError("Need at least 2 points")
     return 2 * radius * math.sin(math.pi / num_points)
-    
+
 class GoetianSigilRingDrawer:
 
     def __init__(self):
-        self.rune_drawer = GoetianRuneDrawer()
-
-    def create_polygon_with_circle(self, n_sides, radius, stroke="black", fill_polygon="none", fill_circle="none", stroke_width=1):
-        """
-        Create an SvgObject containing a regular N-sided polygon and an inscribed circle of radius R.
-        """
-        if n_sides < 3:
-            raise ValueError("Polygon must have at least 3 sides")
-        
-        dwg = svgwrite.Drawing()
-        group = dwg.g()  # Group to hold polygon + circle
-
-        # Center at (radius, radius)
-        cx, cy = radius, radius
-
-        # --- Polygon ---
-        points = []
-        for i in range(n_sides):
-            angle = 2 * math.pi * i / n_sides - math.pi/2  # start pointing up
-            x = cx + radius * math.cos(angle)
-            y = cy + radius * math.sin(angle)
-            points.append((x, y))
-        
-        poly = dwg.polygon(points=points, stroke=stroke, fill=fill_polygon, stroke_width=stroke_width)
-        group.add(poly)
-
-        # --- Inscribed circle ---
-        # circ = dwg.circle(center=(cx, cy), r=radius, stroke=stroke, fill=fill_circle, stroke_width=stroke_width)
-        # group.add(circ)
-
-        # SvgObject width/height = 2*radius to fully contain the shape
-        obj = SvgObject(group=group, width=2*radius, height=2*radius, center_x=radius, center_y=radius)
-        return obj
+        pass
 
     def rune_group_to_ring(self, group, rune_svgs, center_x, center_y, inner_radius, rune_size, stroke_width, even_odd):
 
@@ -1112,16 +1311,14 @@ class GoetianSigilRingDrawer:
             else:
                 spoke_start = point_on_circle(inner_radius, center_x, center_y, points, i)
                 spoke_end = point_on_circle(outer_radius, center_x, center_y, points, i)
-                create_line(group, 
+                draw_line(group, 
                             spoke_start[0], spoke_start[1],
                             spoke_end[0], spoke_end[1],
                             stroke_width=stroke_width)
-                            
-
-    def sentence_to_svg_obj(self, sentence, inner_radius=200, rune_size=200, stroke_width=5):
+      
+    def draw_to_svg_obj(self, rune_svgs, inner_radius=200, rune_size=200, stroke_width=5):
 
         # get all the runes we will place
-        rune_svgs = self.rune_drawer.sentence_to_svg_objs(sentence, rune_size, stroke_width)
         max_rune_per_ring = 12
         rune_svg_groups = [rune_svgs[i:i + max_rune_per_ring] for i in range(0, len(rune_svgs), max_rune_per_ring)]
         
@@ -1140,61 +1337,61 @@ class GoetianSigilRingDrawer:
             this_ring_inner_r = (i * ring_thickness) + inner_radius
             self.rune_group_to_ring(group, rune_svg_groups[i], center_x, center_y, this_ring_inner_r, rune_size, stroke_width, i % 2 == 0)
 
-
-
         return SvgObject(group, full_radius*2, full_radius*2)
 
+class GoerianSigilPolyDrawer:
+    def __init__(self):
+        pass
 
-
-
-
-        '''
+    def draw_to_svg_obj(self, rune_svgs, inner_radius=200, rune_size=200, stroke_width=5):
         dwg = svgwrite.Drawing()
         group = dwg.g()
+        b = rune_size * 2.5
+        h = draw_poly_triangle(group, b, len(rune_svgs), stroke_width=stroke_width)
+        r = rune_svgs[0]
+        r.set_xy(b/2 - rune_size/2,b - rune_size/2)
+        r.draw_to_group(group)
+
+
+        return SvgObject(group, b, h)
+
+class GoerianSigilDrawer:
+    def __init__(self):
+        self.ring_drawer = GoetianSigilRingDrawer()
+        self.poly_drawer = GoerianSigilPolyDrawer()
+        self.rune_drawer = GoetianRuneDrawer()
+
+    def draw_to_svg_obj(self, sentence, rune_size=200, stroke_width=10):
+        start_radius = rune_size * 2
+
+        rune_svgs = self.rune_drawer.draw_to_svg_objs(sentence, rune_size, stroke_width)
+
+        dwg = svgwrite.Drawing()
+        group = dwg.g()
+
+        ring1 = self.ring_drawer.draw_to_svg_obj(rune_svgs, inner_radius=start_radius, stroke_width=stroke_width, rune_size=rune_size)
+        ring1.draw_to_group(group)
+        return SvgObject(group, ring1.width, ring1.height)
         
-        # find the total width
-        vert_rune_gap = rune_size / 8
-        outer_radius = inner_radius + vert_rune_gap + rune_size + vert_rune_gap
+        # poly1 = self.poly_drawer.draw_to_svg_obj(rune_svgs, stroke_width=stroke_width, rune_size=rune_size)
+        # poly1.draw_to_group(group)
+        # return SvgObject(group, poly1.width, poly1.height)
 
-        center_x = outer_radius
-        center_y = outer_radius
+        # here move the rune generation and count out here
+        # group the syllables for each concentric ring
+        # intersparce with some astrology runes
+        # add a center peice
 
-        draw_ring(group, inner_radius, center_x, center_y, stroke_width=stroke_width)
-        draw_ring(group, outer_radius, center_x, center_y, stroke_width=stroke_width)
 
+sentance = "qwertyuiopasdfghjklzxcvbnm"
 
-        points = len(runes) * 2
-        rune_idx = 0
-        rune_angle_spacing = 360 / len(runes)
-        for i in range(points):
-            if i % 2 == 0:
-                rune_point = point_on_circle(inner_radius + vert_rune_gap, center_x, center_y, points, i)
-                rune_svg_obj = runes[rune_idx]
-                rune_svg_obj.set_origin(0.5, 1)
-                rune_svg_obj.set_xy(rune_point[0] - rune_size/2, rune_point[1] - rune_size)
-                rune_svg_obj.set_rotate(rune_angle_spacing * rune_idx)
-                rune_svg_obj.draw_to_group(group)
-                rune_idx += 1
-            else:
-                spoke_start = point_on_circle(inner_radius, center_x, center_y, points, i)
-                spoke_end = point_on_circle(outer_radius, center_x, center_y, points, i)
-                create_line(group, 
-                            spoke_start[0], spoke_start[1],
-                            spoke_end[0], spoke_end[1],
-                            stroke_width=stroke_width)
-                            
-        return SvgObject(group, outer_radius*2, outer_radius*2)
-        '''
-
-sentance = 'the big fat stupid dog went around the lot'
-
-drawer = GoetianSigilRingDrawer()
+drawer = GoerianSigilDrawer()
 # drawer = LogogramDrawer()
 
 s = 400
 dwg = svgwrite.Drawing('out.svg')
 dwg.add(dwg.rect(insert=(0, 0), size=("100%", "100%"), fill="white"))
-s = drawer.sentence_to_svg_obj(sentance, inner_radius=500, stroke_width=10)
+s = drawer.draw_to_svg_obj(sentance)
 dwg['width'] = s.width
 dwg['height'] = s.height
 s.draw_to_canvas(dwg)
