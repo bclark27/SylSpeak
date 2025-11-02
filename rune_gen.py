@@ -31,8 +31,10 @@ class SvgObject:
         self.scale_y = 1
 
         # Transform origin as normalized coordinates inside bounding box
-        self.origin_rel_x = 0.5
-        self.origin_rel_y = 0.5
+        self.origin_rel_x = 0
+        self.origin_rel_y = 0
+
+        self._update_transform()
 
     # --- Public setters ---
     def set_xy(self, new_x, new_y):
@@ -395,7 +397,7 @@ class Composition:
         # Start recursive drawing
         draw_node(self, 0, 0, size, size)
 
-        svg_obj = SvgObject(group, size, size, 0, 0)
+        svg_obj = SvgObject(group, size, size)
         return svg_obj
 
 
@@ -932,8 +934,6 @@ class GoetianRuneDrawer:
 
         return chunks
 
-
-
     def construct_word_tree(self, word):
 
         # first get the components
@@ -966,8 +966,7 @@ class GoetianRuneDrawer:
 
         return trees[0]
 
-
-    def sentence_to_svg_obj(self, dwg, sentence, size=200, stroke=5):
+    def sentence_to_svg_objs(self, sentence, size=200, stroke_width=5):
         
         # first split the sentance up into chunks words
         words = sentance.split(' ')
@@ -985,21 +984,72 @@ class GoetianRuneDrawer:
                 continue
             chunk_trees.append(chunk_tree)
 
-        char_gap = size / 8
-        dims = ((size * len(chunk_trees)) + ((len(chunk_trees) - 1) * char_gap), size)
-
+        dwg = svgwrite.Drawing()
         sentence_group = dwg.g()
         x = 0
+        svgs = []
         for i in range(len(chunk_trees)):
             t = chunk_trees[i]
-            svg_obj = t.create_svg_obj(dwg, size, stroke)
-            svg_obj.set_xy(x, 0)
-            svg_obj.draw_to_group(sentence_group)
+            svg_obj = t.create_svg_obj(dwg, size, stroke_width)
+            svgs.append(svg_obj)
+
+        return svgs
+
+    def sentence_to_svg_obj(self, sentence, size=200, stroke_width=5):
+        
+        svgs = self.sentence_to_svg_objs(sentance, size, stroke_width)
+
+        dwg = svgwrite.Drawing()
+        sentence_group = dwg.g()
+        char_gap = size / 8
+        x = 0
+        for i in range(len(svgs)):
+            svgs[i].set_xy(x, 0)
+            svgs[i].draw_to_group(sentence_group)
             x += size + char_gap
 
+        dims = ((size * len(svgs)) + ((len(svgs) - 1) * char_gap), size)
         return SvgObject(sentence_group, dims[0], dims[1])
 
 
+def draw_ring(group, radius, x, y, stroke="black", stroke_width=5, fill="none"):
+    dwg = svgwrite.Drawing()
+    circle = dwg.circle(center=(x, y), r=radius, stroke=stroke, fill=fill, stroke_width=stroke_width)
+    group.add(circle)
+
+def create_line(group, x1, y1, x2, y2, stroke="black", stroke_width=5):
+    """
+    Create an SvgObject containing a line from (x1, y1) to (x2, y2).
+    """
+    dwg = svgwrite.Drawing()
+    line = dwg.line(start=(x1, y1), end=(x2, y2), stroke=stroke, stroke_width=stroke_width)
+    group.add(line)
+
+    return group
+
+def point_on_circle(radius, center_x, center_y, num_points, index):
+    """
+    Returns the (x, y) coordinates of a point evenly spaced around a circle.
+
+    :param radius: radius of the circle
+    :param center_x: x-coordinate of circle center
+    :param center_y: y-coordinate of circle center
+    :param num_points: total number of points evenly spaced
+    :param index: which point to return (0-based)
+    :return: (x, y) coordinates of the point
+    """
+    if num_points < 1:
+        raise ValueError("num_points must be at least 1")
+    angle = 2 * math.pi * index / num_points - math.pi/2  # start from top
+    x = center_x + radius * math.cos(angle)
+    y = center_y + radius * math.sin(angle)
+    return x, y
+
+def distance_between_points(radius, num_points):
+    if num_points < 2:
+        raise ValueError("Need at least 2 points")
+    return 2 * radius * math.sin(math.pi / num_points)
+    
 class GoetianSigilRingDrawer:
 
     def __init__(self):
@@ -1037,94 +1087,114 @@ class GoetianSigilRingDrawer:
         obj = SvgObject(group=group, width=2*radius, height=2*radius, center_x=radius, center_y=radius)
         return obj
 
-    def sentence_to_svg_obj(self, dwg, sentence, radius=1000, run_size=200, stroke=5):
+    def rune_group_to_ring(self, group, rune_svgs, center_x, center_y, inner_radius, rune_size, stroke_width, even_odd):
 
-        words = sentance.split(' ')
+        # find the total width
+        vert_rune_gap = rune_size / 8
+        outer_radius = inner_radius + vert_rune_gap + rune_size + vert_rune_gap
 
-        # save some room for the runes
+        draw_ring(group, inner_radius, center_x, center_y, stroke_width=stroke_width)
+        draw_ring(group, outer_radius, center_x, center_y, stroke_width=stroke_width)
 
 
-        return self.create_polygon_with_circle(len(words), size/2, stroke_width=stroke)
+        points = len(rune_svgs) * 2
+        rune_idx = 0
+        angle_spacing = 360 / points
+        for i in range(points):
+            if (i % 2 == 0) == even_odd:
+                rune_point = point_on_circle(inner_radius + vert_rune_gap, center_x, center_y, points, i)
+                rune_svg_obj = rune_svgs[rune_idx]
+                rune_svg_obj.set_origin(0.5, 1)
+                rune_svg_obj.set_xy(rune_point[0] - rune_size/2, rune_point[1] - rune_size)
+                rune_svg_obj.set_rotate(angle_spacing * i)
+                rune_svg_obj.draw_to_group(group)
+                rune_idx += 1
+            else:
+                spoke_start = point_on_circle(inner_radius, center_x, center_y, points, i)
+                spoke_end = point_on_circle(outer_radius, center_x, center_y, points, i)
+                create_line(group, 
+                            spoke_start[0], spoke_start[1],
+                            spoke_end[0], spoke_end[1],
+                            stroke_width=stroke_width)
+                            
 
-class GoetianSigilCenterDrawer:
-    def __init__(self):
-        self.rune_drawer = GoetianRuneDrawer()
-    
-    def create_star_outer_triangles(self, n_triangles, base_length, stroke="black", fill="none", stroke_width=1):
-        """
-        Create an SvgObject of a star made of n outer triangles with given base length.
-        
-        :param n_triangles: Number of triangles around the circle
-        :param base_length: Length of each triangle base
-        """
-        if n_triangles < 2:
-            raise ValueError("Need at least 2 triangles")
+    def sentence_to_svg_obj(self, sentence, inner_radius=200, rune_size=200, stroke_width=5):
+
+        # get all the runes we will place
+        rune_svgs = self.rune_drawer.sentence_to_svg_objs(sentence, rune_size, stroke_width)
+        max_rune_per_ring = 12
+        rune_svg_groups = [rune_svgs[i:i + max_rune_per_ring] for i in range(0, len(rune_svgs), max_rune_per_ring)]
         
         dwg = svgwrite.Drawing()
         group = dwg.g()
+
+        rune_group_count = len(rune_svg_groups)
+        vert_rune_gap = rune_size / 8
+        ring_thickness = vert_rune_gap + rune_size + vert_rune_gap
+
+        full_radius = rune_group_count * ring_thickness + inner_radius
+        center_x = full_radius
+        center_y = full_radius
+
+        for i in range(rune_group_count):
+            this_ring_inner_r = (i * ring_thickness) + inner_radius
+            self.rune_group_to_ring(group, rune_svg_groups[i], center_x, center_y, this_ring_inner_r, rune_size, stroke_width, i % 2 == 0)
+
+
+
+        return SvgObject(group, full_radius*2, full_radius*2)
+
+
+
+
+
+        '''
+        dwg = svgwrite.Drawing()
+        group = dwg.g()
         
-        # Compute the radius of the circle where triangle bases lie
-        # Formula: radius = base_length / (2 * sin(pi / n_triangles))
-        r_base = base_length / (2 * math.sin(math.pi / n_triangles))
-        
-        # Triangle height: choose same as base length for nice proportions
-        h = base_length  # you can tweak this
-        
-        points_all = []
+        # find the total width
+        vert_rune_gap = rune_size / 8
+        outer_radius = inner_radius + vert_rune_gap + rune_size + vert_rune_gap
 
-        for i in range(n_triangles):
-            # Center angle for this triangle
-            theta = 2 * math.pi * i / n_triangles
+        center_x = outer_radius
+        center_y = outer_radius
 
-            # Base center coordinates on the circle
-            bx = r_base * math.cos(theta)
-            by = r_base * math.sin(theta)
+        draw_ring(group, inner_radius, center_x, center_y, stroke_width=stroke_width)
+        draw_ring(group, outer_radius, center_x, center_y, stroke_width=stroke_width)
 
-            # Base endpoints (perpendicular to radius)
-            perp_angle = theta + math.pi / 2
-            half_base = base_length / 2
-            x1 = bx + half_base * math.cos(perp_angle)
-            y1 = by + half_base * math.sin(perp_angle)
-            x2 = bx - half_base * math.cos(perp_angle)
-            y2 = by - half_base * math.sin(perp_angle)
 
-            # Tip coordinates (along radius)
-            tip_length = h
-            tx = bx + tip_length * math.cos(theta)
-            ty = by + tip_length * math.sin(theta)
+        points = len(runes) * 2
+        rune_idx = 0
+        rune_angle_spacing = 360 / len(runes)
+        for i in range(points):
+            if i % 2 == 0:
+                rune_point = point_on_circle(inner_radius + vert_rune_gap, center_x, center_y, points, i)
+                rune_svg_obj = runes[rune_idx]
+                rune_svg_obj.set_origin(0.5, 1)
+                rune_svg_obj.set_xy(rune_point[0] - rune_size/2, rune_point[1] - rune_size)
+                rune_svg_obj.set_rotate(rune_angle_spacing * rune_idx)
+                rune_svg_obj.draw_to_group(group)
+                rune_idx += 1
+            else:
+                spoke_start = point_on_circle(inner_radius, center_x, center_y, points, i)
+                spoke_end = point_on_circle(outer_radius, center_x, center_y, points, i)
+                create_line(group, 
+                            spoke_start[0], spoke_start[1],
+                            spoke_end[0], spoke_end[1],
+                            stroke_width=stroke_width)
+                            
+        return SvgObject(group, outer_radius*2, outer_radius*2)
+        '''
 
-            tri = dwg.polygon(points=[(x1, y1), (x2, y2), (tx, ty)],
-                            stroke=stroke, fill=fill, stroke_width=stroke_width)
-            group.add(tri)
-            points_all.extend([(x1, y1), (x2, y2), (tx, ty)])
+sentance = 'the big fat stupid dog went around the lot'
 
-        # Compute bounding box
-        xs = [p[0] for p in points_all]
-        ys = [p[1] for p in points_all]
-        min_x, max_x = min(xs), max(xs)
-        min_y, max_y = min(ys), max(ys)
-        width = max_x - min_x
-        height = max_y - min_y
-        center_x = width / 2 - min_x
-        center_y = height / 2 - min_y
-
-        # Shift group so top-left at (0,0)
-        group.translate(-min_x, -min_y)
-
-        obj = SvgObject(group=group, width=width, height=height, center_x=center_x, center_y=center_y)
-        return obj
-    def sentence_to_svg_obj(self, dwg, sentence, radius=1000, run_size=200, stroke=5):
-        return self.create_star_outer_triangles(8, 100, stroke_width=stroke)
-
-sentance = 'the quick brown fox jumped over the lazy dog'
-
-drawer = GoetianSigilCenterDrawer()
+drawer = GoetianSigilRingDrawer()
 # drawer = LogogramDrawer()
 
 s = 400
 dwg = svgwrite.Drawing('out.svg')
 dwg.add(dwg.rect(insert=(0, 0), size=("100%", "100%"), fill="white"))
-s = drawer.sentence_to_svg_obj(dwg, sentance)
+s = drawer.sentence_to_svg_obj(sentance, inner_radius=500, stroke_width=10)
 dwg['width'] = s.width
 dwg['height'] = s.height
 s.draw_to_canvas(dwg)
