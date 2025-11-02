@@ -1191,6 +1191,60 @@ def chunk_by_pattern(arr, pattern):
         # so it repeats forever
     return result
 
+def star_with_construction(N: int, R: float, stroke=1, inner_r=-1) -> SvgObject:
+    """
+    Generates an SvgObject of an N-pointed star with optional construction lines.
+    
+    Parameters:
+      N           : number of star points (>= 2)
+      R           : outer radius
+      center      : (cx, cy) center
+      stroke      : stroke width
+      inner_ratio : fraction of R for inner vertices (0 < inner_ratio < 1)
+    """
+    if N < 2:
+        raise ValueError("N must be >= 2")
+    cx, cy = (R, R)
+
+    if inner_r >= R or inner_r <= 0:
+        inner_r = R * 0.5
+    
+    points = []
+    for i in range(2*N):
+        angle = math.pi/2 + i * math.pi / N  # start at top
+        radius = R if i % 2 == 0 else inner_r
+        x = cx + radius * math.cos(angle)
+        y = cy - radius * math.sin(angle)  # SVG y-axis down
+        points.append((x,y))
+    
+    dwg = svgwrite.Drawing()
+    g = dwg.g()
+    
+    # --- main star path ---
+    path_data = "M {} {}".format(*points[0])
+    for p in points[1:]:
+        path_data += " L {} {}".format(*p)
+    path_data += " Z"
+    g.add(dwg.path(d=path_data, stroke="black", fill="none", stroke_width=stroke))
+    
+    # --- construction lines ---
+    # connect inner vertices to form inner polygon
+    inner_vertices = points[1::2]
+    for i in range(len(inner_vertices)):
+        x1, y1 = inner_vertices[i]
+        x2, y2 = inner_vertices[(i+1) % len(inner_vertices)]
+        g.add(dwg.line(start=(x1, y1), end=(x2, y2), stroke='black', stroke_width=stroke))
+    
+    # connect outer vertices to form outer polygon
+    outer_vertices = points[0::2]
+    for i in range(len(outer_vertices)):
+        x1, y1 = outer_vertices[i]
+        x2, y2 = outer_vertices[(i+1) % len(outer_vertices)]
+        g.add(dwg.line(start=(x1, y1), end=(x2, y2), stroke='gray', stroke_width=stroke))
+    
+    width = height = 2*R
+    return SvgObject(g, width, height)
+
 class GoetianSigilRingDrawer:
 
     def __init__(self):
@@ -1303,23 +1357,29 @@ class GoerianSigilDrawer:
         self.rune_drawer = GoetianRuneDrawer()
 
     def draw_to_svg_obj(self, sentence, rune_size=200, stroke_width=10):
-        start_radius = rune_size * 2
 
         rune_svgs = self.rune_drawer.draw_to_svg_objs(sentence, rune_size, stroke_width)
 
         dwg = svgwrite.Drawing()
         group = dwg.g()
 
-        chunk_pattern = [3,5,7,4,6,4,7]
+        chunk_pattern = [6,3,7,4,6,4,7,13,17,6]
         rune_svg_groups = chunk_by_pattern(rune_svgs, chunk_pattern)
 
         # ring1 = self.ring_drawer.draw_to_svg_obj(runes1, inner_radius=start_radius, stroke_width=stroke_width, rune_size=rune_size)
         # ring1.draw_to_group(group)
         
         sigil_svgs = []
-        current_max_radius = 200
+        start_radius = rune_size * 4
+        current_max_radius = start_radius
         ring_space = rune_size / 8
+        
         for i in range(len(rune_svg_groups)):
+
+            if i == 0:
+                center_peice_svg = star_with_construction(len(rune_svg_groups[0]), start_radius, stroke=stroke_width)
+                sigil_svgs.append(center_peice_svg)
+
             rune_group = rune_svg_groups[i]
             sigil_svg = None
             if i % 3 == 0:
