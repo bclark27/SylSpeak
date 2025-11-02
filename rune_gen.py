@@ -5,6 +5,7 @@ from enum import Enum
 import random
 import svgwrite
 import math
+import re
 import copy
 import cmath
 
@@ -104,7 +105,7 @@ class SvgObject:
 # --- Glyph definition ---
 class Glyph:
 
-    use_detailed_glyphs = False
+    use_detailed_glyphs = True
     detailed_steps = 30
 
     def __init__(self, 
@@ -249,7 +250,6 @@ class Glyph:
 
 
         parent.add(g)
-
 
 class Character:
     def __init__(self, main_glyph, simplified_glyphs=[]):
@@ -463,7 +463,6 @@ class Composition:
 
         svg_obj = SvgObject(group, size, size)
         return svg_obj
-
 
 class LogogramDrawer:
 
@@ -759,7 +758,7 @@ class LogogramDrawer:
         # laod in the word->radicals set
         self.WORD_COMPONENTS = self.get_word_compositions(vocab_path)
     
-    def sentence_to_svg_obj(self, dwg, sentence, size=200, stroke=5):
+    def draw_to_svg_objs(self, sentence, size=200, stroke_width=5):
         words = sentence.split(' ')
 
         word_trees = []
@@ -770,15 +769,30 @@ class LogogramDrawer:
         char_gap = size / 8
         dims = ((size * len(words)) + ((len(words) - 1) * char_gap), size)
 
-        sentence_group = dwg.g()
+        dwg = svgwrite.Drawing()
         x = 0
+        svgs = []
         for i in range(len(word_trees)):
             t = word_trees[i]
-            svg_obj = t.create_svg_obj(dwg, size, stroke)
-            svg_obj.set_xy(x, 0)
-            svg_obj.draw_to_group(sentence_group)
+            svg_obj = t.create_svg_obj(dwg, size, stroke_width)
+            svgs.append(svg_obj)
+
+        return svgs
+
+    def draw_to_svg_obj(self, sentence, size=200, stroke_width=5):
+        
+        svgs = self.draw_to_svg_objs(sentance, size, stroke_width)
+
+        dwg = svgwrite.Drawing()
+        sentence_group = dwg.g()
+        char_gap = size / 8
+        x = 0
+        for i in range(len(svgs)):
+            svgs[i].set_xy(x, 0)
+            svgs[i].draw_to_group(sentence_group)
             x += size + char_gap
 
+        dims = ((size * len(svgs)) + ((len(svgs) - 1) * char_gap), size)
         return SvgObject(sentence_group, dims[0], dims[1])
 
 class GoetianRuneDrawer:
@@ -1206,7 +1220,6 @@ class GoetianRuneDrawer:
             chunk_trees.append(chunk_tree)
 
         dwg = svgwrite.Drawing()
-        sentence_group = dwg.g()
         x = 0
         svgs = []
         for i in range(len(chunk_trees)):
@@ -1369,13 +1382,13 @@ class GoerianSigilDrawer:
         dwg = svgwrite.Drawing()
         group = dwg.g()
 
-        ring1 = self.ring_drawer.draw_to_svg_obj(rune_svgs, inner_radius=start_radius, stroke_width=stroke_width, rune_size=rune_size)
-        ring1.draw_to_group(group)
-        return SvgObject(group, ring1.width, ring1.height)
+        # ring1 = self.ring_drawer.draw_to_svg_obj(rune_svgs, inner_radius=start_radius, stroke_width=stroke_width, rune_size=rune_size)
+        # ring1.draw_to_group(group)
+        # return SvgObject(group, ring1.width, ring1.height)
         
-        # poly1 = self.poly_drawer.draw_to_svg_obj(rune_svgs, stroke_width=stroke_width, rune_size=rune_size)
-        # poly1.draw_to_group(group)
-        # return SvgObject(group, poly1.width, poly1.height)
+        poly1 = self.poly_drawer.draw_to_svg_obj(rune_svgs, stroke_width=stroke_width, rune_size=rune_size)
+        poly1.draw_to_group(group)
+        return SvgObject(group, poly1.width, poly1.height)
 
         # here move the rune generation and count out here
         # group the syllables for each concentric ring
@@ -1383,10 +1396,13 @@ class GoerianSigilDrawer:
         # add a center peice
 
 
-sentance = "qwertyuiopasdfghjklzxcvbnm"
+
+
+
+sentance = "In youth he had felt the hidden beauty and ecstasy of things and had been a poet"
 
 drawer = GoerianSigilDrawer()
-# drawer = LogogramDrawer()
+#drawer = LogogramDrawer()
 
 s = 400
 dwg = svgwrite.Drawing('out.svg')
