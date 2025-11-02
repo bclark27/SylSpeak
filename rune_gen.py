@@ -8,6 +8,7 @@ import math
 import re
 import copy
 import cmath
+from typing import Tuple, List
 
 class CompositionOp(Enum):
     VERT=1
@@ -953,169 +954,13 @@ class GoetianRuneDrawer:
             ),
     }
     
-    RUNES2 = {
-        'a': Character(
-                Glyph(
-                    'M 0 0 L -7 -10 L 7 -10 Z'
-                ),
-                simplified_glyphs=[
-                ]
-            ),
-        'b': Character(
-                Glyph(
-                    'M 0 -19 V 0 M -2 -19 L 0 -19 C 16 -19 15 -20 15 -13 M 2 0 L -2 0',
-                    is_hollow=True,
-                    padding=[0.05,0.1,0.05,0.15],
-                ),
-                simplified_glyphs=[
-                    Glyph(
-                        'M 0 -19 V 0 M -2 -19 L 0 -19 C 15 -19 15 0 0 0 L -2 0'
-                    )
-                ]
-            ),
-        'c': Character(
-                Glyph(
-                    'M 0 -22 L 0 -16 M 0 -10 L 0 -4 M 0 -19 C 14 -31 14 5 0 -7',
-                    is_hollow=True,
-                    padding=[0.15,0.2,0.15,0.1],
-                )
-            ),
-        'd': Character(
-                Glyph(
-                    'M -22 0 L -16 0 M -10 0 L -4 0 M -19 0 C -31 -14 5 -14 -7 0',
-                    is_hollow=True,
-                    padding=[0.15,0.2,0.1,0.2],
-                ),
-            ),
-        'e': Character(
-                Glyph(
-                    'M -18 -20 L 3 -20 L -7 -2 Z M -13 -8 L -2 -8',
-                ),
-            ),
-        'f': Character(
-                Glyph(
-                    'M -17 -30 L -17 -9 M -20 -30 L -17 -30 C -8 -30 -8 -19 -17 -19',
-                ),
-            ),
-        'g': Character(
-                Glyph(
-                    'M 0 22 L 0 16 M 0 10 L 0 4 M 0 19 C -14 31 -14 -5 0 7',
-                    is_hollow=True,
-                    padding=[0.15,0.15,0.15,0.2],
-                ),
-            ),
-        'h': Character(
-                Glyph(
-                    'M 18 20 L -3 20 L 7 2 Z M 2 18 L 2 4',
-                ),
-            ),
-        'i': Character(
-                Glyph(
-                    'M 0 0 C -11 0 -11 15 0 15 C 11 15 11 0 0 0',
-                ),
-            ),
-        'j': Character(
-                Glyph(
-                    'M -8 7 C -8 8 -8 15 0 15 C 11 15 9 -7 -6 2 M -8 7 L 4 7',
-                ),
-            ),
-        'k': Character(
-                Glyph(
-                    'M -9 0 L -6 0 M -2 0 L 1 0 M -8 0 L -4 -7 L 0 0',
-                ),
-            ),
-        'l': Character(
-                Glyph(
-                    'M -6 -9 L -6 -6 M -6 -8 L 4 -8 L 4 5',
-                    is_hollow=True,
-                    padding=[0.1,0.1,0,0.05],
-                ),
-            ),
-        'm': Character(
-                Glyph(
-                    'M 6 8 L 6 6 M 6 8 L -4 8 L -4 -5',
-                    is_hollow=True,
-                    padding=[0,0,0.1,0.1],
-                ),
-            ),
-        'n': Character(
-                Glyph(
-                    'M -8 -8 L -8 8 L 0 -8 L 0 8',
-                ),
-            ),
-        'o': Character(
-                Glyph(
-                    'M 0 0 C 8 0 8 12 0 12 C -8 12 -8 0 0 0 M 0 0 L 0 12',
-                ),
-            ),
-        'p': Character(
-                Glyph(
-                    'M 0 -14 L 0 6 M -2 6 L 0 6 C 8 6 8 -6 0 -6 M -2 -14 L 3 -14',
-                ),
-            ),
-        'q': Character(
-                Glyph(
-                    'M 0 -5 L 5 0 L 0 5 L -5 0 Z',
-                ),
-            ),
-        'r': Character(
-                Glyph(
-                    'M -8 0 L -8 -20 L 8 -20 L 8 0 M -9 0 L -6 0 M 9 0 L 6 0',
-                    is_hollow=True,
-                    padding=[0.05,0.1,0.05,0.1],
-                ),
-            ),
-        's': Character(
-                Glyph(
-                    'M 0 0 C 8 0 8 12 0 12 C -8 12 -8 0 0 0 M -6 6 L 6 6',
-                ),
-            ),
-        't': Character(
-                Glyph(
-                    'M -5 4 L -1 8 L 3 4 M -1 8 L -1 14',
-                ),
-            ),
-        'u': Character(
-                Glyph(
-                    'M 0 2 L -3 5 L 0 8',
-                ),
-            ),
-        'v': Character(
-                Glyph(
-                    'M 9 -0 L 6 -0 M 2 -0 L -1 0 M 8 -0 L 4 7 L 0 0',
-                ),
-            ),
-        'w': Character(
-                Glyph(
-                    'M -9 -4 L -1 -4 L -9 4',
-                ),
-            ),
-        'x': Character(
-                Glyph(
-                    'M -9 -4 L -1 -4 L -1 4 L -9 4 Z',
-                    is_hollow=False,
-                    padding=[0.1,0.1,0.1,0.1],
-                ),
-            ),
-        'y': Character(
-                Glyph(
-                    'M -3 -7 L -12 2 M -12 -7 L -5 0',
-                ),
-            ),
-        'z': Character(
-                Glyph(
-                    'M -13 -3 L -9 -3 L -13 -7 L -1 -7 L -5 -3 L -1 -3',
-                ),
-            ),
-    }
-
     SVG_CHARS = RUNES1
 
     def __init__(self):
         pass
 
     def chunk_cv(self, word, allowed_chars=None):
-        # n = 1
+        # n = 2
         # return [word[i:i + n] for i in range(0, len(word), n)]
         """
         Break word into contiguous consonant-vowel chunks.
@@ -1294,6 +1139,58 @@ def distance_between_points(radius, num_points):
         raise ValueError("Need at least 2 points")
     return 2 * radius * math.sin(math.pi / num_points)
 
+def ngon_vertices_from_incircle(R: float, N: int, center: Tuple[float,float]=(0.0,0.0), start_angle: float = -math.pi/2) -> Tuple[float, List[Tuple[float,float]], float]:
+    """
+    Given an incircle radius R and number of sides N, compute:
+      - circumradius (distance from center to polygon vertices)
+      - list of N vertex (x,y) coordinates (regular N-gon)
+      - side length
+
+    Parameters:
+      R           : radius of the circle that the N-gon's sides are tangent to (inradius)
+      N           : number of polygon sides (N >= 3)
+      center      : (cx, cy) coordinates of the shared center
+      start_angle : angular offset for vertex 0 in radians (default -pi/2 -> top)
+
+    Returns:
+      (circumradius, vertices_list, side_length)
+    """
+    if N < 3:
+        raise ValueError("N must be >= 3")
+
+    cx, cy = center
+    # circumradius (distance to vertices)
+    R_v = R / math.cos(math.pi / N)
+
+    # side length
+    side = 2 * R * math.tan(math.pi / N)  # equivalent to 2 * R_v * sin(pi/N)
+
+    vertices = []
+    for k in range(N):
+        angle = start_angle + 2 * math.pi * k / N
+        x = cx + R_v * math.cos(angle)
+        y = cy + R_v * math.sin(angle)
+        vertices.append((x, y))
+
+    return R_v, vertices, side
+
+def chunk_by_pattern(arr, pattern):
+    result = []
+    i = 0
+    p_i = 0
+
+    while i < len(arr):
+        # Get current chunk size from pattern
+        size = pattern[p_i]
+        result.append(arr[i:i + size])
+        i += size
+        # Advance pattern index, looping if needed
+        if p_i < len(pattern) - 1:
+            p_i += 1
+        # Once we reach the last pattern size, stay there
+        # so it repeats forever
+    return result
+
 class GoetianSigilRingDrawer:
 
     def __init__(self):
@@ -1356,17 +1253,48 @@ class GoerianSigilPolyDrawer:
     def __init__(self):
         pass
 
-    def draw_to_svg_obj(self, rune_svgs, inner_radius=200, rune_size=200, stroke_width=5):
+    def draw_to_svg_obj(self, rune_svgs, inner_radius=800, rune_size=200, stroke_width=5):
         dwg = svgwrite.Drawing()
         group = dwg.g()
-        b = rune_size * 2.5
-        h = draw_poly_triangle(group, b, len(rune_svgs), stroke_width=stroke_width)
-        r = rune_svgs[0]
-        r.set_xy(b/2 - rune_size/2,b - rune_size/2)
-        r.draw_to_group(group)
+        # b = rune_size * 2.5
+        # h = draw_poly_triangle(group, b, len(rune_svgs), stroke_width=stroke_width)
+        # r = rune_svgs[0]
+        # r.set_xy(b/2 - rune_size/2,b - rune_size/2)
+        # r.draw_to_group(group)
 
+        rune_count = len(rune_svgs)
 
-        return SvgObject(group, b, h)
+        Rv, verts, s = ngon_vertices_from_incircle(inner_radius, rune_count)
+        
+        # ok now we know the max corner dist as well as the rune size and placement so we can get teh theoretical full width of this thing
+        rune_gap = rune_size / 8
+        rune_dist = inner_radius + rune_gap
+        max_rune_dist = rune_dist + rune_size
+        outer_poly_dist = Rv
+        full_width = max(max_rune_dist, outer_poly_dist) * 2
+
+        center_x = full_width / 2
+        center_y = full_width / 2
+
+        # ok now we want to draw the polygon part and the runes
+        # so we want to alternate the points vertex,rune,vertex,rune
+        # so if we put the runes on the even, then the vertexes should go on the odd
+
+        # draw the poly first
+        for i in range(rune_count):
+            vert1_x, vert1_y = point_on_circle(outer_poly_dist, center_x, center_y, rune_count, i)
+            vert2_x, vert2_y = point_on_circle(outer_poly_dist, center_x, center_y, rune_count, i+1)
+            draw_line(group, vert1_x, vert1_y, vert2_x, vert2_y, stroke_width=stroke_width)
+
+        rune_angle_spacing = 360 / rune_count
+        for i in range(rune_count):
+            x, y = point_on_circle(rune_dist, center_x, center_y, rune_count * 2, i * 2 + 1)
+            rune_svgs[i].set_rotate((rune_angle_spacing * i) + (rune_angle_spacing / 2))
+            rune_svgs[i].set_origin(0.5, 1)
+            rune_svgs[i].set_xy(x - rune_size/2, y - rune_size)
+            rune_svgs[i].draw_to_group(group)
+            
+        return SvgObject(group, full_width, full_width)
 
 class GoerianSigilDrawer:
     def __init__(self):
@@ -1382,13 +1310,43 @@ class GoerianSigilDrawer:
         dwg = svgwrite.Drawing()
         group = dwg.g()
 
-        # ring1 = self.ring_drawer.draw_to_svg_obj(rune_svgs, inner_radius=start_radius, stroke_width=stroke_width, rune_size=rune_size)
+        chunk_pattern = [3,5,7,4,6,4,7]
+        rune_svg_groups = chunk_by_pattern(rune_svgs, chunk_pattern)
+
+        # ring1 = self.ring_drawer.draw_to_svg_obj(runes1, inner_radius=start_radius, stroke_width=stroke_width, rune_size=rune_size)
         # ring1.draw_to_group(group)
-        # return SvgObject(group, ring1.width, ring1.height)
         
-        poly1 = self.poly_drawer.draw_to_svg_obj(rune_svgs, stroke_width=stroke_width, rune_size=rune_size)
-        poly1.draw_to_group(group)
-        return SvgObject(group, poly1.width, poly1.height)
+        sigil_svgs = []
+        current_max_radius = 200
+        ring_space = rune_size / 8
+        for i in range(len(rune_svg_groups)):
+            rune_group = rune_svg_groups[i]
+            sigil_svg = None
+            if i % 3 == 0:
+                sigil_svg = self.poly_drawer.draw_to_svg_obj(rune_group, inner_radius=current_max_radius, stroke_width=stroke_width, rune_size=rune_size)
+                current_max_radius = sigil_svg.width / 2 + ring_space
+            elif i % 3 == 1:
+                sigil_svg = self.ring_drawer.draw_to_svg_obj(rune_group, inner_radius=current_max_radius, stroke_width=stroke_width, rune_size=rune_size)
+                current_max_radius = sigil_svg.width / 2 + ring_space
+            elif i % 3 == 2:
+                current_max_radius += ring_space
+                sigil_svg = self.ring_drawer.draw_to_svg_obj(rune_group, inner_radius=current_max_radius, stroke_width=stroke_width, rune_size=rune_size)
+                current_max_radius = sigil_svg.width / 2 + ring_space
+
+            sigil_svgs.append(sigil_svg)
+
+        center_x = current_max_radius
+        center_y = current_max_radius
+
+        for sigil_svg in sigil_svgs:
+            sigil_svg.set_xy(center_x - sigil_svg.width/2, center_y - sigil_svg.height/2)
+            sigil_svg.draw_to_group(group)
+
+        return SvgObject(group, current_max_radius*2, current_max_radius*2)
+
+        # poly1 = self.poly_drawer.draw_to_svg_obj(rune_svgs, stroke_width=stroke_width, rune_size=rune_size)
+        # poly1.draw_to_group(group)
+        # return SvgObject(group, poly1.width, poly1.height)
 
         # here move the rune generation and count out here
         # group the syllables for each concentric ring
@@ -1399,7 +1357,7 @@ class GoerianSigilDrawer:
 
 
 
-sentance = "In youth he had felt the hidden beauty and ecstasy of things and had been a poet"
+sentance = "We live on a placid island of ignorance in the midst of black seas of infinity, and it was not meant that we should voyage far."
 
 drawer = GoerianSigilDrawer()
 #drawer = LogogramDrawer()
